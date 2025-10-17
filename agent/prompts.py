@@ -1,5 +1,5 @@
 SYSTEM_PROMPT = """You are a Python bug-fixing assistant.
-You will iteratively: (1) read files/tests and failure traces, (2) propose small patches,
+You will iteratively: (1) analyze code/tests and failure traces, (2) propose small patches,
 (3) re-run tests, (4) stop when tests pass. Keep changes minimal and safe."""
 
 REACT_INSTRUCTIONS = """
@@ -16,14 +16,14 @@ Strict ReAct format (ONE thought and ONE action per iteration — parser-enforce
 Allowed actions:
 - Patch[{"start": <int>, "end": <int>, "text": "<new code>"}]
         (use replace patches only; "start" and "end" are the line offsets in the file (0-based), 
-        i.e., "start": 0 and "end": 0 means that "text" is inserted before the first line while "start": 1 and "end": 2 means that the second line is replaced by "text";
+        i.e., "start": 0 and "end": 0 means that "text" is inserted before the first line while "start": 0 and "end": 1 means that the second line is replaced by "text";
         "text" is the new content with which to replace that section)
 - RunPytests[]
 - Finish[<brief summary of the fix>]
 
 Examples — valid:
 Thought: The failing test shows an IndexError; adjust bounds.
-Action: Patch[{"start":12,"end":18,"text":"    return 0\n"}]
+Action: Patch[{"start":12,"end":13,"text":"    return 0\n"}]
 
 Examples — invalid (will be rejected by the parser):
 Thought: First thought.
@@ -43,7 +43,7 @@ FEW_SHOT = r"""
 Question: The following code: <code omitted for brevity>
 has a bug and leads to this test failure: <failure trace omitted for brevity>
 Thought: The test says TypeError due to None. Add default return value.
-Action: Patch[{"type":"replace","start":12,"end":18,"text":"    return 0\n"}]
+Action: Patch[{"type":"replace","start":12,"end":12,"text":"    return 0\n"}]
 Observation: Patch applied.
 Thought: Re-run tests.
 Action: RunPytests[]

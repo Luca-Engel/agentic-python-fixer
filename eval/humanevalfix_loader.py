@@ -4,7 +4,7 @@ from datasets import load_dataset
 def add_file_names_to_row(row):
     return {
         "task_id": row["task_id"].replace("/", "_"),
-        "entire_buggy_code": f'{row.get("declaration", "")}{row.get("buggy_solution", "")}',
+        "entire_buggy_code": f'{row["declaration"]}{row["docstring"]}{row["buggy_solution"]}',
         "entry_file": "task.py",
         "test_file": "test_task.py",
     }

@@ -24,14 +24,13 @@ class Toolset:
     def write_file(self, start: int, end: int, text: str) -> ToolResult:
     # def write_file(self, text: str) -> ToolResult:
         p = os.path.join(self.workdir, "task.py")
-        src = open(p, "r", encoding="utf-8").read()
+        src = open(p, "r", encoding="utf-8").read().strip()
 
-
-        print("Before patch:")
+        print("3.1 Before patch:")
         print(src)
         sp = SpanPatch(path=p, start=start, end=end, text=text)
         dst = apply_span_patch(src, sp)
-        print(f"After patch (start={start}, end={end}):")
+        print(f"3.2 After patch (start={start}, end={end}):")
         print(dst)
         print("----------------")
         # dst = text  # replace entire file

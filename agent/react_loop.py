@@ -29,11 +29,23 @@ class ReActLoop:
         prompt = "\n\n".join([SYSTEM_PROMPT, REACT_INSTRUCTIONS, FEW_SHOT, task_header])
         transcript = prompt
         for i in range(self.max_iters):
-            current_code = f'\n\nThe current code is as follows: ```Python\n{self.tools.open_file("task.py").output.strip()}```'
+            print("Iteration:", i + 1, "/", self.max_iters)
+            current_code = f'\n\nThe current code is as follows:\n```Python\n{self.tools.open_file("task.py").output.strip()}\n```'
+            current_code = (
+                    "\n\nThe current code is as follows:\n```Python\n"
+                    + self.tools.open_file("task.py").output.strip()
+                    + "\n```"
+                    + "\n\nThe tests are as follows:\n```Python\n"
+                    + self.tools.open_file("test_task.py").output.strip()
+                    + "\n```"
+            )
+
+            print("1. LLM Prompt:")
+            print(transcript + current_code)
             completion = self.llm(transcript + current_code)  # returns appended 'Thought/Action/ActionInput'
-            # print("model completion:")
-            # print(completion)
-            # print("--------------------------------")
+            print("2. LLM Completion:")
+            print(completion)
+            print("--------------------------------")
             self.trajectory.append(completion)
 
             # Parse last action block
