@@ -10,13 +10,14 @@ Strict ReAct format (ONE thought and ONE action per iteration — parser-enforce
 - `Action:` must be on a single line and use the form: ActionName[<compact JSON>]
   - The JSON inside brackets must be valid compact JSON (no unescaped newlines).
   - Allowed ActionName values: Patch, RunPytests, Finish.
-  - For multiple edits use a single Patch action with an array of patch objects: Patch[{"patches":[{"start":..., "end":..., "text":"..."}]}]
+  - For multiple edits do the first edit now, then the next edit in the next iteration, etc.
 - Do not include any extra narration, code fences, or surrounding text. Output must be strictly the two lines described.
 
 Allowed actions:
 - Patch[{"start": <int>, "end": <int>, "text": "<new code>"}]
-        (use replace patches only; "start" and "end" are character offsets
-        in the file; "text" is the new content with which to replace that section)
+        (use replace patches only; "start" and "end" are the line offsets in the file (0-based), 
+        i.e., "start": 0 and "end": 0 means that "text" is inserted before the first line while "start": 1 and "end": 2 means that the second line is replaced by "text";
+        "text" is the new content with which to replace that section)
 - RunPytests[]
 - Finish[<brief summary of the fix>]
 
@@ -34,6 +35,7 @@ Repeat this pattern until tests pass, then call:
 Thought: All tests passed; summary.
 Action: Finish[{"message":"brief summary"}]
 """
+#   - For multiple edits use a single Patch action with an array of patch objects: Patch[{"patches":[{"start":..., "end":..., "text":"..."}]}]
 
 
 FEW_SHOT = r"""

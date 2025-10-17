@@ -1,7 +1,7 @@
 import os, re, glob, json
 from dataclasses import dataclass
-from .patches import SpanPatch, apply_span_patch
-from .docker_sandbox import run_pytests_docker
+from agent.patches import SpanPatch, apply_span_patch
+from agent.docker_sandbox import run_pytests_docker
 
 
 @dataclass
@@ -22,11 +22,21 @@ class Toolset:
         return ToolResult(True, open(p, "r", encoding="utf-8").read())
 
     def write_file(self, start: int, end: int, text: str) -> ToolResult:
+    # def write_file(self, text: str) -> ToolResult:
         p = os.path.join(self.workdir, "task.py")
         src = open(p, "r", encoding="utf-8").read()
-        # if patch.get("type") == "replace":
+
+
+        print("Before patch:")
+        print(src)
         sp = SpanPatch(path=p, start=start, end=end, text=text)
         dst = apply_span_patch(src, sp)
+        print(f"After patch (start={start}, end={end}):")
+        print(dst)
+        print("----------------")
+        # dst = text  # replace entire file
+
+
         with open(p, "w", encoding="utf-8") as f:
             f.write(dst)
         return ToolResult(True, "Wrote patch.")
@@ -54,3 +64,29 @@ class Toolset:
             except Exception:
                 pass
         return ToolResult(True, "\n".join(hits) or "(no hits)")
+
+
+
+if __name__ == "__main__":
+    src = """from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = elem - elem2
+                if distance < threshold:
+                    return True
+
+    return False"""
+
+    text = """                distance = abs(elem - elem2)"""
+    start = 8
+    end = 9
+
+    sp = SpanPatch(path="p", start=start, end=end, text=text)
+    dst = apply_span_patch(src, sp)
+
+    print("after patch:")
+    print(dst)

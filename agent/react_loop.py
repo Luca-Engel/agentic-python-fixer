@@ -29,7 +29,8 @@ class ReActLoop:
         prompt = "\n\n".join([SYSTEM_PROMPT, REACT_INSTRUCTIONS, FEW_SHOT, task_header])
         transcript = prompt
         for i in range(self.max_iters):
-            completion = self.llm(transcript)  # returns appended 'Thought/Action/ActionInput'
+            current_code = f'\n\nThe current code is as follows: ```Python\n{self.tools.open_file("task.py").output.strip()}```'
+            completion = self.llm(transcript + current_code)  # returns appended 'Thought/Action/ActionInput'
             # print("model completion:")
             # print(completion)
             # print("--------------------------------")
@@ -44,6 +45,9 @@ class ReActLoop:
 
             obs = self._call_tool(action_name, action_args)
             transcript += f"\nObservation: {truncate(obs)}"
+
+        print(" -> budget exhausted, trajectory:")
+        print("\n- ".join(self.trajectory))
         return {"status": "budget_exhausted", "trajectory": self.trajectory}
 
 
