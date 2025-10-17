@@ -4,7 +4,7 @@ from datasets import load_dataset
 def add_file_names_to_row(row):
     return {
         "task_id": row["task_id"].replace("/", "_"),
-        "entire_buggy_code": f'{row["declaration"]}{row["docstring"]}{row["buggy_solution"]}',
+        "entire_buggy_code": f"""{row["declaration"]}    '''\n{row["docstring"]}\n    '''\n{row["buggy_solution"]}""",
         "entry_file": "task.py",
         "test_file": "test_task.py",
     }
@@ -27,3 +27,5 @@ if __name__ == "__main__":
     print("Dataset fields:", tasks.column_names)
     print(f"Loaded {len(tasks)} tasks, example:")
     first_task = tasks[0]
+    print("first task buggy code:")
+    print(first_task["entire_buggy_code"])

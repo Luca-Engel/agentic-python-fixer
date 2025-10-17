@@ -16,6 +16,7 @@ class ReActLoop:
         # if name == "open_file":
         #     return self.tools.open_file(**args).output
         if name == "Patch":
+            # return self.tools.write_file(**args).output
             return self.tools.write_file(**args).output
         if name == "RunPytests":
             tests_output = self.tools.run_pytests(**args).output
@@ -30,10 +31,15 @@ class ReActLoop:
         transcript = prompt
         for i in range(self.max_iters):
             print("Iteration:", i + 1, "/", self.max_iters)
-            current_code = f'\n\nThe current code is as follows:\n```Python\n{self.tools.open_file("task.py").output.strip()}\n```'
+            task_content = self.tools.open_file("task.py").output.strip()
+            task_lines = task_content.splitlines()
+            numbered_task = "\n".join(f"{i}: {line}" for i, line in enumerate(task_lines))
+
             current_code = (
-                    "\n\nThe current code is as follows:\n```Python\n"
-                    + self.tools.open_file("task.py").output.strip()
+                    "\n\nThe current code is as follows (line numbers are added for clarity but you should "
+                    "provide the fix with ONLY THE CODE):\n```Python\n"
+                    # + self.tools.open_file("task.py").output.strip()
+                    + numbered_task
                     + "\n```"
                     + "\n\nThe tests are as follows:\n```Python\n"
                     + self.tools.open_file("test_task.py").output.strip()

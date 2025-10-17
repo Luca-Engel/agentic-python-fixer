@@ -15,14 +15,15 @@ Strict ReAct format (ONE thought and ONE action per iteration — parser-enforce
 
 Allowed actions:
 - Patch[{"start": <int>, "end": <int>, "text": "<new code>"}]
-        (use replace patches only; "start" and "end" are the line offsets in the file (0-based), 
-        i.e., "start": 0 and "end": 0 means that "text" is inserted before the first line while "start": 0 and "end": 1 means that the second line is replaced by "text";
-        "text" is the new content with which to replace that section)
+        (use replace patches only; *`start`* and *`end`* are the line offsets in the file (0-based).
+         To **replace** an existing line with index `x`, set `"start": x` and `"end": x+1`.
+         To **insert** a new line *before* the current line `x`, set `"start": x` and `"end": x`.
+         `text` is the new content (may contain multiple lines) that will replace the range.)
 - RunPytests[]
 - Finish[<brief summary of the fix>]
 
 Examples — valid:
-Thought: The failing test shows an IndexError; adjust bounds.
+Thought: The test fails because line 12 does not return 0. Replace this line with the correct return statement.
 Action: Patch[{"start":12,"end":13,"text":"    return 0\n"}]
 
 Examples — invalid (will be rejected by the parser):
@@ -40,8 +41,9 @@ Action: Finish[{"message":"brief summary"}]
 
 FEW_SHOT = r"""
 # Example
-Question: The following code: <code omitted for brevity>
-has a bug and leads to this test failure: <failure trace omitted for brevity>
+Question: The code shown below (always the updated version is displayed, so if you have previously changed something, these changes will be included in the code below) has a bug.
+When executing its tests, the following output is produced:
+<output of failed tests omitted for brevity>
 Thought: The test says TypeError due to None. Add default return value.
 Action: Patch[{"type":"replace","start":12,"end":12,"text":"    return 0\n"}]
 Observation: Patch applied.
@@ -50,8 +52,22 @@ Action: RunPytests[]
 Observation: All tests passed.
 Thought: Done.
 Action: Finish[]
+
+The current code is as follows (line numbers are added for clarity but you should provide the fix with ONLY THE CODE):
+<numbered code omitted for brevity>
+The tests are as follows:
+<tests omitted for brevity>
 """
 
 def get_task_header(entire_buggy_code: str, tests_output: str) -> str:
-    return (f"Question: The following code:\n```python\n{entire_buggy_code.strip()}\n```\n"
-            f"has a bug and leads to this test failure:\n```\n{tests_output.strip()}\n```")
+    # return (f"Question: The following code:\n```python\n{entire_buggy_code.strip()}\n```\n"
+    #         f"has a bug and leads to this test failure:\n```\n{tests_output.strip()}\n```")
+    # return (f"Question: The code shown below (always the updated version is displayed, "
+    #         f"so if you have previously changed something, these changes will be included in the code below) "
+    #         f"has a bug.\n"
+    #         f"When executing its tests, the following output is produced:\n```\n{tests_output.strip()}\n```")
+
+    return (f"Question: The code shown below (always the updated version is displayed, "
+            f"so if you have previously changed something, these changes will be included in the code below) "
+            f"may have a bug.\n"
+            f"The output of execits tests is also displayed below (again, always the latest output after your changes)")
