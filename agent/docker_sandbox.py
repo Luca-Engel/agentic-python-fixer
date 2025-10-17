@@ -77,8 +77,6 @@ def run_pytests_docker(
         *extra_pytest_args,
     ]
 
-    print("docker command is: ", ' '.join(cmd))
-
     try:
         proc = subprocess.run(
             cmd,

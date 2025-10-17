@@ -25,6 +25,7 @@ dependencies = [
     "tiktoken>=0.7.0", # optional token counting
     "bitsandbytes>=0.43.1; platform_system!='Windows'", # if quantizing
     "tqdm>=4.66.0",
+    "openai>=1.40.0",
 ]
 
 [tool.setuptools.packages.find]

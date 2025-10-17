@@ -28,18 +28,18 @@ class ReActLoop:
     def run(self, task_header: str) -> Dict[str, Any]:
         prompt = "\n\n".join([SYSTEM_PROMPT, REACT_INSTRUCTIONS, FEW_SHOT, task_header])
         transcript = prompt
-        print(f"LLM prompt:\n{prompt}\n{'-'*40}")
         for i in range(self.max_iters):
-            print(f"transcript at {i}:\n{transcript}\n****************************************")
             completion = self.llm(transcript)  # returns appended 'Thought/Action/ActionInput'
-            print("model completion:")
-            print(completion)
-            print("--------------------------------")
+            # print("model completion:")
+            # print(completion)
+            # print("--------------------------------")
             self.trajectory.append(completion)
 
             # Parse last action block
             action_name, action_args = parse_action(completion)
             if action_name == "Finish":
+                print(" -> finishing, trajectory:")
+                print("\n- ".join(self.trajectory))
                 return {"status": "done", "trajectory": self.trajectory}
 
             obs = self._call_tool(action_name, action_args)
@@ -47,26 +47,20 @@ class ReActLoop:
         return {"status": "budget_exhausted", "trajectory": self.trajectory}
 
 
-# def parse_action(block: str):
-#     # very simple extraction; replace with robust parser for production
-#     import json, re
-#     print("parsing action from block:", block)
-#     name = re.search(r"Action:\s*(\w+)", block).group(1)
-#     args = re.search(r"ActionInput:\s*(\{.*\})", block, re.S).group(1)
-#     return name, json.loads(args)
-
 def parse_action(block: str):
     import json, re
-    print("parsing action from block:", block)
     match = re.search(r"(\w+)\[(.*)\]", block, re.S)
     if not match:
         raise ValueError("No action found")
     name, arg = match.group(1), match.group(2)
     if name == "Patch":
+        # print(" -> patching")
         args = json.loads(arg)
     elif name == "RunPytests":
+#         print(" -> running tests")
         args = {}
     elif name == "Finish":
+#         print(" -> finishing")
         args = {}
     else:
         raise ValueError(f"Unknown action: {name}")

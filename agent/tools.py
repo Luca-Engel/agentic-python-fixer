@@ -21,17 +21,12 @@ class Toolset:
             return ToolResult(False, f"File not found: {path}")
         return ToolResult(True, open(p, "r", encoding="utf-8").read())
 
-    def write_file(self, path: str, patch: dict) -> ToolResult:
-        p = os.path.join(self.workdir, path)
-        if not os.path.isfile(p):
-            return ToolResult(False, f"File not found: {path}")
+    def write_file(self, start: int, end: int, text: str) -> ToolResult:
+        p = os.path.join(self.workdir, "task.py")
         src = open(p, "r", encoding="utf-8").read()
         # if patch.get("type") == "replace":
-        if "start" in patch and "end" in patch and "text" in patch:
-            sp = SpanPatch(path=path, start=patch["start"], end=patch["end"], text=patch["text"])
-            dst = apply_span_patch(src, sp)
-        else:
-            return ToolResult(False, "Unsupported patch type, requires 'start', 'end', 'text' fields.")
+        sp = SpanPatch(path=p, start=start, end=end, text=text)
+        dst = apply_span_patch(src, sp)
         with open(p, "w", encoding="utf-8") as f:
             f.write(dst)
         return ToolResult(True, "Wrote patch.")

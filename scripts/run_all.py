@@ -25,7 +25,7 @@ def main(model: str = "Qwen/Qwen3-0.6B",
     rcfg = RuntimeConfig(max_iters=max_iters, test_timeout_s=timeout_secs)
     results = []
 
-    for t in tqdm(tasks, desc="Running tasks"):
+    for i, t in enumerate(tqdm(tasks, desc="Running tasks"), start=1):
         results.append(run_single_task(t, mcfg, rcfg))
     with open(report, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)

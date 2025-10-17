@@ -1,5 +1,7 @@
 import json
 from typing import Dict, Any
+
+from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 from agent.docker_sandbox import run_pytests_docker
@@ -10,30 +12,51 @@ from agent.config import ModelConfig, RuntimeConfig
 from eval.humanevalfix_loader import load_tasks
 from eval.task_workspace import TaskWorkspace
 
+from dotenv import load_dotenv
+import os
+import openai
+
 
 def make_llm(model_cfg: ModelConfig):
     """
     Create a language model callable from the given configuration.
     """
-    print("Loading model:", model_cfg.model_name)
-    tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_cfg.model_name, device_map="auto")
-    print("Model loaded.")
-    gen = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tok,
-        return_full_text=False,
-        temperature=model_cfg.temperature,
-        top_p=model_cfg.top_p,
-        top_k=model_cfg.top_k,
-        min_p=model_cfg.min_p,
-        max_new_tokens=model_cfg.max_new_tokens
-    )
+    # print("Loading model:", model_cfg.model_name)
+    # tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
+    # model = AutoModelForCausalLM.from_pretrained(model_cfg.model_name, device_map="auto")
+    # print("Model loaded.")
+    # gen = pipeline(
+    #     "text-generation",
+    #     model=model,
+    #     tokenizer=tok,
+    #     return_full_text=False,
+    #     temperature=model_cfg.temperature,
+    #     top_p=model_cfg.top_p,
+    #     top_k=model_cfg.top_k,
+    #     min_p=model_cfg.min_p,
+    #     max_new_tokens=model_cfg.max_new_tokens
+    # )
+    #
+    # def _call(prompt: str) -> str:
+    #     out = gen(prompt, num_return_sequences=1)[0]["generated_text"]
+    #     return out
+
+    load_dotenv()  # loads .env into environment
+    api_key = os.getenv("OPENAI_API_KEY")
+    env_model = os.getenv("OPENAI_MODEL")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set in environment or .env")
+
+    _client = OpenAI(api_key=api_key)
 
     def _call(prompt: str) -> str:
-        out = gen(prompt, num_return_sequences=1)[0]["generated_text"]
-        return out
+
+        resp = _client.chat.completions.create(
+            model=env_model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return resp.choices[0].message.content
 
     return _call
 
