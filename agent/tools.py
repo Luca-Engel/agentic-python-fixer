@@ -26,11 +26,12 @@ class Toolset:
         if not os.path.isfile(p):
             return ToolResult(False, f"File not found: {path}")
         src = open(p, "r", encoding="utf-8").read()
-        if patch.get("type") == "replace":
+        # if patch.get("type") == "replace":
+        if "start" in patch and "end" in patch and "text" in patch:
             sp = SpanPatch(path=path, start=patch["start"], end=patch["end"], text=patch["text"])
             dst = apply_span_patch(src, sp)
         else:
-            return ToolResult(False, "Unsupported patch type")
+            return ToolResult(False, "Unsupported patch type, requires 'start', 'end', 'text' fields.")
         with open(p, "w", encoding="utf-8") as f:
             f.write(dst)
         return ToolResult(True, "Wrote patch.")

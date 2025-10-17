@@ -6,8 +6,10 @@ class TaskWorkspace:
         self.tmp = tempfile.mkdtemp(prefix=f"{task['task_id']}_")
         self.keep = keep
         with open(os.path.join(self.tmp, task["entry_file"]), "w", encoding="utf-8") as f:
-            f.write(task["buggy_solution"])
+            # f.write(task["buggy_solution"])
+            f.write(task["entire_buggy_code"])
         with open(os.path.join(self.tmp, "test_task.py"), "w", encoding="utf-8") as f:
+            f.write(f"from task import {task['entry_point']}\n")
             f.write(task["test"])
 
     def path(self): return self.tmp

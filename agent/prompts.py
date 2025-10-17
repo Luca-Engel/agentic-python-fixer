@@ -12,9 +12,9 @@ Observation: (tool output filled in by the system)
 Repeat until tests pass, then call Finish[{"message": "the fixed code"}] with a brief summary.
 
 Allowed actions:
-- Patch[{"type": "replace", "start": <int>, "end": <int>, "text": "<new code>"}]
-        (use "replace" patches only; "start" and "end" are character offsets
-        in the file; "text" is the new content to insert)
+- Patch[{"start": <int>, "end": <int>, "text": "<new code>"}]
+        (use replace patches only; "start" and "end" are character offsets
+        in the file; "text" is the new content with which to replace that section)
 - RunPytests[]
 - Finish[<brief summary of the fix>]
 """
@@ -30,5 +30,5 @@ Thought: Re-run tests.
 Action: RunPytests[]
 Observation: All tests passed.
 Thought: Done.
-Action: Finish[{"message":"Fixed default return."}]
+Action: Finish[]
 """
