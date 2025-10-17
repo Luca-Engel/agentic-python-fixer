@@ -19,7 +19,7 @@ class ReActLoop:
             return self.tools.write_file(**args).output
         if name == "RunPytests":
             tests_output = self.tools.run_pytests(**args).output
-            tests_output_prompt = f"running the tests produced the following output: ```\n{tests_output}\n```"
+            tests_output_prompt = f"running the tests produced the following output: ```\n{tests_output.strip()}\n```"
             return tests_output_prompt
         # if name == "search_repo":
         #     return self.tools.search_repo(**args).output
@@ -30,7 +30,7 @@ class ReActLoop:
         transcript = prompt
         print(f"LLM prompt:\n{prompt}\n{'-'*40}")
         for i in range(self.max_iters):
-            print(f"transcript at {i}:{transcript}")
+            print(f"transcript at {i}:\n{transcript}\n****************************************")
             completion = self.llm(transcript)  # returns appended 'Thought/Action/ActionInput'
             print("model completion:")
             print(completion)

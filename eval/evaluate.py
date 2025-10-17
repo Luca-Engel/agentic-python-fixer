@@ -3,6 +3,7 @@ from typing import Dict, Any
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 from agent.docker_sandbox import run_pytests_docker
+from agent.prompts import get_task_header
 from agent.tools import Toolset
 from agent.react_loop import ReActLoop
 from agent.config import ModelConfig, RuntimeConfig
@@ -43,8 +44,8 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
         tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
         llm = make_llm(model_cfg)
         loop = ReActLoop(llm=llm, tools=tools, max_iters=rt_cfg.max_iters)
-        # header = f"Task: {task['task_id']}\nEntry: {task['entry_file']}"
-        header = f"Task: {task['task_id']}\nEntry: {task['entry_file']}"
+        tests_output = tools.run_pytests().output
+        header = get_task_header(entire_buggy_code=task['entire_buggy_code'], tests_output=tests_output)
         res = loop.run(task_header=header)
         # Final adjudication: run tests one last time
         ok = tools.run_pytests(timeout_s=rt_cfg.test_timeout_s,

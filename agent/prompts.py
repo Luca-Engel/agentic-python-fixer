@@ -32,3 +32,7 @@ Observation: All tests passed.
 Thought: Done.
 Action: Finish[]
 """
+
+def get_task_header(entire_buggy_code: str, tests_output: str) -> str:
+    return (f"Question: The following code:\n```python\n{entire_buggy_code.strip()}\n```\n"
+            f"has a bug and leads to this test failure:\n```\n{tests_output.strip()}\n```")
