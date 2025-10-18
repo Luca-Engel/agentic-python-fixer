@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Tuple
 
 from agent.tools import Toolset
 from agent.prompts import build_thought_prompt, build_patch_prompt
+import black
 
 
 class ReActLoop:
@@ -34,6 +35,9 @@ class ReActLoop:
         # initial test run
         traj_test_msg, test_run_results = self._get_test_run_result({})
         self.trajectory.append(f"Observation: {traj_test_msg}")
+        if "All tests passed." in traj_test_msg:
+            print(" -> all tests already passed, finishing.")
+            return {"status": "done", "trajectory": self.trajectory}
 
         for i in range(self.max_iters):
             print("Iteration:", i + 1, "/", self.max_iters)
@@ -49,7 +53,12 @@ class ReActLoop:
             thought_out = self.llm_thought(thought_prompt)
             print("2. Thought Completion:\n", thought_out)
 
-            kind, payload, matched = _parse_thought_or_finish(thought_out)
+            try:
+                kind, payload, matched = _parse_thought_or_finish(thought_out)
+            except Exception as e:
+                print(" -> error parsing Thought/Finish output:", e)
+                self.trajectory.append(f"Error parsing your Thought output, retry and ensure it is concise and follows the format exactly.")
+                continue
             if kind == "Finish":
                 self.trajectory.append(f"Action: Finish[{json.dumps(payload, separators=(',', ':'))}]")
                 print(" -> finishing, trajectory:")
@@ -80,6 +89,9 @@ class ReActLoop:
             # re-run tests
             traj_test_msg, test_run_results = self._get_test_run_result({})
             self.trajectory.append(f"Observation: {obs} {traj_test_msg}")
+            if "All tests passed." in traj_test_msg:
+                break
+
 
         print(" -> budget exhausted, trajectory:")
         print("\n- ".join(self.trajectory))
@@ -125,31 +137,28 @@ def _parse_thought_or_finish(block: str) -> tuple[str, dict, str]:
     import json, re
 
     lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
-    line = lines[-1]
-    # if len(lines) != 1:
-    #     raise ValueError("Thought/Finish agent must output exactly one non-empty line.")
-    # line = lines[0]
+    i = len(lines) - 1
+    name = ""
+    inner = ""
+    matched = ""
+    while i >= 0:
+        line = lines[i]
+        m = re.match(r'^(\w+)\[(.*)\]$', line, re.S)
+        if not m:
+            m2 = re.match(r'^Thought:\s*(.+)$', line)
+            if not m2:
+                i -= 1
+                continue
+            name = "Thought"
+            inner = m2.group(1)
+            matched = m2.group(0).strip()
+        else:
+            name, inner = m.group(1), m.group(2)
+            matched = m.group(0).strip()
 
-    m = re.match(r'^(\w+)\[(.*)\]$', line, re.S)
-    if not m:
-        m2 = re.match(r'^Thought:\s*(.+)$', line)
-        if not m2:
-            raise ValueError("No action found (expected Finish[...] or Thought[...] or 'Thought: <text>').")
-        name = "Thought"
-        inner = m2.group(1)
-        matched = m2.group(0).strip()
-    else:
-        name, inner = m.group(1), m.group(2)
-        matched = m.group(0).strip()
+        if name in ("Finish", "Thought"):
+            break
 
-    if name == "Finish":
-        inner = inner.strip()
-        args = {} if inner == "" else json.loads(inner)
-        if not isinstance(args, dict):
-            raise ValueError("Finish[...] must contain a JSON object.")
-        if "message" not in args or not isinstance(args["message"], str) or not args["message"].strip():
-            raise ValueError('Finish JSON must include non-empty "message": "<text>".')
-        return "Finish", args, matched
 
     if name == "Thought":
         content = inner.strip()
@@ -185,15 +194,31 @@ def _parse_patch(block: str) -> tuple[str, dict, str]:
     import json, re
 
     lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
-    if len(lines) != 1:
-        raise ValueError("Patch agent must output exactly one non-empty line.")
-    line = lines[0]
+    i = len(lines) - 1
+    inner = ""
+    matched = ""
+    while i >= 0:
+        line = lines[i]
+        m = re.match(r'^Patch\[(.*)\]$', line, re.S)
+        if not m:
+            i -= 1
+            continue
 
-    m = re.match(r'^Patch\[(.*)\]$', line, re.S)
-    if not m:
-        raise ValueError("Expected a single 'Patch[...]' line.")
-    inner = m.group(1).strip()
-    matched = m.group(0).strip()
+        inner = m.group(1).strip()
+        matched = m.group(0).strip()
+        break
+
+
+
+    # if len(lines) != 1:
+    #     raise ValueError("Patch agent must output exactly one non-empty line.")
+    # line = lines[0]
+
+    # m = re.match(r'^Patch\[(.*)\]$', line, re.S)
+    # if not m:
+    #     raise ValueError("Expected a single 'Patch[...]' line.")
+    # inner = m.group(1).strip()
+    # matched = m.group(0).strip()
 
     args = {} if inner == "" else json.loads(inner)
     if not isinstance(args, dict):
@@ -207,6 +232,7 @@ def _parse_patch(block: str) -> tuple[str, dict, str]:
     try:
         args["start"] = int(args["start"])
         args["end"] = int(args["end"])
+        args["nb_indents"] = int(args.get("nb_indents", 0))
     except Exception:
         raise ValueError("'start' and 'end' must be integers.")
     if not isinstance(args["text"], str):
@@ -216,12 +242,38 @@ def _parse_patch(block: str) -> tuple[str, dict, str]:
 
 
 if __name__ == "__main__":
-    text = """
-I need to do some changes to the code. The solution is to remove a line.
-Thought[Remove the line that incorrectly returns True when two numbers are closer than the threshold.]
-"""
+    print("\n    hello\n\n".strip())
+    print("----")
 
-    print(parse_action(text))
+
+    unformatted = """
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    '''
+Check if in given list of numbers, are any two numbers closer to each other than
+given threshold.
+>>> has_close_elements([1.0, 2.0, 3.0], 0.5)
+False
+>>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+True
+    '''
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = abs(elem - elem2)
+                distance = elem - elem2
+                if distance < threshold:
+                    return True
+
+    return False"""
+    print(black.format_str(unformatted, mode=black.Mode()))
+
+# if __name__ == "__main__":
+#     text = """
+# I need to do some changes to the code. The solution is to remove a line.
+# Thought[Remove the line that incorrectly returns True when two numbers are closer than the threshold.]
+# """
+#
+#     print(parse_action(text))
 
 
 

@@ -94,10 +94,20 @@ def _instantiate_model_hf_api(model_cfg: ModelConfig):
             model=env_model,
             messages=[{"role": "user", "content": prompt}],
             # stream=True,
-            top_p=0.8,
-            temperature=0.7,
+            # Thinking mode
+            temperature=0.6,
+            top_p=0.95,
+            # top_k=20,
+            # min_p=0,
             max_tokens=5000,
             seed=42
+            # Non-thinking mode
+            # temperature=0.7,
+            # top_p=0.8,
+            # top_k=20,
+            # min_p=0,
+            # max_tokens=5000,
+            # seed=42
         )
 
         content = resp.choices[0].message.content

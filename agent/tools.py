@@ -1,5 +1,6 @@
 import os, re, glob, json
 from dataclasses import dataclass
+
 from agent.patches import SpanPatch, apply_span_patch
 from agent.docker_sandbox import run_pytests_docker
 from eval.task_workspace import TaskWorkspace
@@ -22,14 +23,15 @@ class Toolset:
             return ToolResult(False, f"File not found: {path}")
         return ToolResult(True, open(p, "r", encoding="utf-8").read())
 
-    def write_file(self, start: int, end: int, text: str) -> ToolResult:
+    def write_file(self, start: int, end: int, nb_indents: int, text: str) -> ToolResult:
     # def write_file(self, text: str) -> ToolResult:
         p = os.path.join(self.workdir, "task.py")
         src = open(p, "r", encoding="utf-8").read().strip()
 
         print("3.1 Before patch:")
         print(src)
-        sp = SpanPatch(path=p, start=start, end=end, text=text)
+        text_with_indents = "    " * nb_indents + text.strip() + "\n"
+        sp = SpanPatch(path=p, start=start, end=end, text=text_with_indents)
         dst = apply_span_patch(src, sp)
         print(f"3.2 After patch (start={start}, end={end}):")
         print(dst)
