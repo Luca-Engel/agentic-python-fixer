@@ -12,7 +12,7 @@ class ModelConfig:
     top_k: int = 20
     min_p: float = 0.0
     max_new_tokens: int = 32768
-    enable_thinking: bool = True
+    enable_thinking: bool = False #True
     add_generation_prompt: bool = True
     tokenize: bool = False
 

@@ -5,7 +5,7 @@ from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 from agent.docker_sandbox import run_pytests_docker
-from agent.prompts import get_task_header
+# from agent.prompts import get_task_header
 from agent.tools import Toolset
 from agent.react_loop import ReActLoop
 from agent.config import ModelConfig, RuntimeConfig
@@ -17,47 +17,47 @@ import os
 import openai
 
 
-def make_llm(model_cfg: ModelConfig):
-    """
-    Create a language model callable from the given configuration.
-    """
-    # print("Loading model:", model_cfg.model_name)
-    # tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
-    # model = AutoModelForCausalLM.from_pretrained(
-    #     model_cfg.model_name,
-    #     dtype="auto",
-    #     device_map="auto",
-    # )
-    # print("Model loaded.")
-    #
-    # def _call(prompt: str) -> str:
-    #     # Prepare a chat-style input with thinking disabled (non-thinking mode)
-    #     messages = [{"role": "user", "content": prompt}]
-    #     text = tok.apply_chat_template(
-    #         messages,
-    #         tokenize=model_cfg.tokenize,
-    #         add_generation_prompt=model_cfg.add_generation_prompt,
-    #         enable_thinking=model_cfg.enable_thinking,
-    #     )
-    #
-    #     # Tokenize and move tensors to model device
-    #     inputs = tok(text, return_tensors="pt").to(model.device)
-    #
-    #     # Generate with non-thinking recommended sampling parameters
-    #     gen = model.generate(
-    #         **inputs,
-    #         max_new_tokens=model_cfg.max_new_tokens,
-    #         do_sample=model_cfg.do_sample,
-    #         temperature=model_cfg.temperature,
-    #         top_p=model_cfg.top_p,
-    #         top_k=model_cfg.top_k,
-    #     )
-    #
-    #     # Extract only the generated portion and decode
-    #     output_ids = gen[0][len(inputs.input_ids[0]):].tolist()
-    #     content = tok.decode(output_ids, skip_special_tokens=True).strip("\n")
-    #     return content
+def _instantiate_model_locally(model_cfg: ModelConfig):
+    print("Loading model:", model_cfg.model_name)
+    tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_cfg.model_name,
+        dtype="auto",
+        device_map="auto",
+    )
+    print("Model loaded.")
 
+    def _call(prompt: str) -> str:
+        # Prepare a chat-style input with thinking disabled (non-thinking mode)
+        messages = [{"role": "user", "content": prompt}]
+        text = tok.apply_chat_template(
+            messages,
+            tokenize=model_cfg.tokenize,
+            add_generation_prompt=model_cfg.add_generation_prompt,
+            enable_thinking=model_cfg.enable_thinking,
+        )
+
+        # Tokenize and move tensors to model device
+        inputs = tok(text, return_tensors="pt").to(model.device)
+
+        # Generate with non-thinking recommended sampling parameters
+        gen = model.generate(
+            **inputs,
+            max_new_tokens=model_cfg.max_new_tokens,
+            do_sample=model_cfg.do_sample,
+            temperature=model_cfg.temperature,
+            top_p=model_cfg.top_p,
+            top_k=model_cfg.top_k,
+        )
+
+        # Extract only the generated portion and decode
+        output_ids = gen[0][len(inputs.input_ids[0]):].tolist()
+        content = tok.decode(output_ids, skip_special_tokens=True).strip("\n")
+        return content
+
+    return _call
+
+def _instantiate_model_openai(model_cfg: ModelConfig):
     load_dotenv()  # loads .env into environment
     api_key = os.getenv("OPENAI_API_KEY")
     env_model = os.getenv("OPENAI_MODEL")
@@ -77,13 +77,54 @@ def make_llm(model_cfg: ModelConfig):
 
     return _call
 
+def _instantiate_model_hf_api(model_cfg: ModelConfig):
+    load_dotenv()  # loads .env into environment
+    api_key = os.getenv("HF_TOKEN")
+    env_model = os.getenv("HF_MODEL")
+
+    _client = OpenAI(
+        base_url="https://h9yo77jwpffhw2sb.us-east4.gcp.endpoints.huggingface.cloud/v1/",
+        api_key=api_key
+    )
+
+    # for message in chat_completion:
+    #     print(message.choices[0].delta.content, end="")
+    def _call(prompt: str) -> str:
+        resp = _client.chat.completions.create(
+            model=env_model,
+            messages=[{"role": "user", "content": prompt}],
+            # stream=True,
+            top_p=0.8,
+            temperature=0.7,
+            max_tokens=5000,
+            seed=42
+        )
+
+        content = resp.choices[0].message.content
+        print("len generated content:", len(content.split()))
+
+        return content #resp.choices[0].message.content
+
+    return _call
+
+
+def make_llm(model_cfg: ModelConfig):
+    """
+    Create a language model callable from the given configuration.
+    """
+    # return _instantiate_model_locally(model_cfg)
+    # return _instantiate_model_openai(model_cfg)
+    return _instantiate_model_hf_api(model_cfg)
+
+
+
 
 def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: RuntimeConfig):
     ws = TaskWorkspace(task)
     try:
         tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
-        llm = make_llm(model_cfg)
-        loop = ReActLoop(llm=llm, tools=tools, max_iters=rt_cfg.max_iters)
+        # llm = make_llm(model_cfg)
+        loop = ReActLoop(llm_thought=make_llm(model_cfg), llm_patch=make_llm(model_cfg), tools=tools, max_iters=rt_cfg.max_iters)
         tests_output = tools.run_pytests().output
         res = loop.run()
         # Final adjudication: run tests one last time
@@ -100,22 +141,48 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
         ws.cleanup()
 
 
+# if __name__ == "__main__":
+#     tasks = load_tasks()
+#     tasks = tasks.select(range(1))
+#
+#     model: str = "Qwen/Qwen3-0.6B"
+#     subset: str = "all"
+#     max_iters: int = 10
+#     timeout_secs: int = 10
+#
+#     mcfg = ModelConfig(model_name=model)
+#     rcfg = RuntimeConfig(max_iters=max_iters, test_timeout_s=timeout_secs)
+#     results = []
+#
+#     for t in tasks:
+#         ws = TaskWorkspace(t)
+#         tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
+#         output = tools.run_pytests().output
+#         print(f"Test output:\n{output}")
+#         ws.cleanup()
+
+
 if __name__ == "__main__":
-    tasks = load_tasks()
-    tasks = tasks.select(range(1))
+    load_dotenv()  # loads .env into environment
+    api_key = os.getenv("HF_TOKEN")
+    env_model = os.getenv("HF_MODEL")
+    print(api_key, env_model)
 
-    model: str = "Qwen/Qwen3-0.6B"
-    subset: str = "all"
-    max_iters: int = 10
-    timeout_secs: int = 10
+    client = OpenAI(
+        base_url="https://h9yo77jwpffhw2sb.us-east4.gcp.endpoints.huggingface.cloud/v1/",
+        api_key=api_key
+    )
 
-    mcfg = ModelConfig(model_name=model)
-    rcfg = RuntimeConfig(max_iters=max_iters, test_timeout_s=timeout_secs)
-    results = []
+    chat_completion = client.chat.completions.create(
+        model="tgi",
+        messages=[
+            {
+                "role": "user",
+                "content": "What is deep learning?"
+            }
+        ],
+        stream=True
+    )
 
-    for t in tasks:
-        ws = TaskWorkspace(t)
-        tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
-        output = tools.run_pytests().output
-        print(f"Test output:\n{output}")
-        ws.cleanup()
+    for message in chat_completion:
+        print(message.choices[0].delta.content, end="")

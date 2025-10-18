@@ -19,7 +19,7 @@ def main(model: str = "Qwen/Qwen3-0.6B",
     tasks = load_tasks()
     if subset.startswith("stratified"):
         # TODO: add stratified sampling by bug_type
-        tasks = tasks.select(range(10))
+        tasks = tasks.select(range(1))
 
     mcfg = ModelConfig(model_name=model)
     rcfg = RuntimeConfig(max_iters=max_iters, test_timeout_s=timeout_secs)

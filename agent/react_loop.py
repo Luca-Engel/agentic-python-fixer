@@ -1,14 +1,14 @@
+import json
 from typing import Dict, Any, List, Tuple
-import black
 
 from agent.tools import Toolset
-from agent.prompts import SYSTEM_PROMPT, REACT_INSTRUCTIONS, FEW_SHOT, get_current_code_and_tests_prompt_part, \
-    get_task_header, get_llm_prompt
+from agent.prompts import build_thought_prompt, build_patch_prompt
 
 
 class ReActLoop:
-    def __init__(self, llm, tools: Toolset, max_iters: int):
-        self.llm = llm
+    def __init__(self, llm_thought, llm_patch, tools: Toolset, max_iters: int):
+        self.llm_thought = llm_thought
+        self.llm_patch = llm_patch
         self.tools = tools
         self.max_iters = max_iters
         self.trajectory: List[str] = []
@@ -20,7 +20,7 @@ class ReActLoop:
         if all_tests_passed:
             return "All tests passed.", "All tests passed."
         else:
-            tests_output_prompt = f"\n```\n{tests_output.strip()}\n```"
+            tests_output_prompt = f"\n```text\n{tests_output.strip()}\n```"
         return "Some tests failed, analyze error and iterate on solution.", tests_output_prompt
 
     def _call_tool(self, name: str, args: Dict[str, Any]) -> str:
@@ -29,41 +29,57 @@ class ReActLoop:
         return f"Unknown tool: {name}"
 
     def run(self) -> Dict[str, Any]:
-        problem_explanation = "\n\n".join([SYSTEM_PROMPT, REACT_INSTRUCTIONS, FEW_SHOT, get_task_header()])
         self.trajectory = []
 
-        trajectory_test_run_analysis, test_run_results = self._get_test_run_result({})
-        self.trajectory.append(f"Observation: {trajectory_test_run_analysis}")
+        # initial test run
+        traj_test_msg, test_run_results = self._get_test_run_result({})
+        self.trajectory.append(f"Observation: {traj_test_msg}")
 
         for i in range(self.max_iters):
             print("Iteration:", i + 1, "/", self.max_iters)
 
-            llm_prompt = get_llm_prompt(
+            # 1) THOUGHT/FINISH AGENT
+            thought_prompt = build_thought_prompt(
                 python_code=self.tools.open_file("task.py").output.strip(),
                 python_tests=self.tools.open_file("test_task.py").output.strip(),
                 tests_run_result=test_run_results,
-                problem_explanation=problem_explanation,
                 current_trajectory=self.trajectory,
             )
+            print("1. Thought Prompt:\n", thought_prompt)
+            thought_out = self.llm_thought(thought_prompt)
+            print("2. Thought Completion:\n", thought_out)
 
-            print("1. LLM Prompt:")
-            print(llm_prompt)
-            completion = self.llm(llm_prompt)
-            print("2. LLM Completion:")
-            print(completion)
-            print("--------------------------------")
-
-            # Parse last action block
-            action_name, action_args, trajectory_line = parse_action(completion)
-            self.trajectory.append(trajectory_line)
-            if action_name == "Finish":
+            kind, payload, matched = _parse_thought_or_finish(thought_out)
+            if kind == "Finish":
+                self.trajectory.append(f"Action: Finish[{json.dumps(payload, separators=(',', ':'))}]")
                 print(" -> finishing, trajectory:")
                 print("\n".join(self.trajectory))
                 return {"status": "done", "trajectory": self.trajectory}
 
-            obs = self._call_tool(action_name, action_args)
-            trajectory_test_run_analysis, test_run_results = self._get_test_run_result({})
-            self.trajectory.append(f"Observation: {obs} {trajectory_test_run_analysis}")
+            # kind == "thought"
+            thought_line = f"Thought: {payload['text']}"
+            self.trajectory.append(thought_line)
+
+            # 2) PATCH AGENT
+            patch_prompt = build_patch_prompt(
+                python_code=self.tools.open_file("task.py").output.strip(),
+                python_tests=self.tools.open_file("test_task.py").output.strip(),
+                tests_run_result=test_run_results,
+                thought_line=thought_line,
+                current_trajectory=self.trajectory,
+            )
+            print("3. Patch Prompt:\n", patch_prompt)
+            patch_out = self.llm_patch(patch_prompt)
+            print("4. Patch Completion:\n", patch_out)
+
+            kind, patch_args, matched = _parse_patch(patch_out)
+            self.trajectory.append(f"Action: Patch[{json.dumps(patch_args, separators=(',', ':'))}]")
+
+            obs = self.tools.write_file(**patch_args).output
+
+            # re-run tests
+            traj_test_msg, test_run_results = self._get_test_run_result({})
+            self.trajectory.append(f"Observation: {obs} {traj_test_msg}")
 
         print(" -> budget exhausted, trajectory:")
         print("\n- ".join(self.trajectory))
@@ -95,6 +111,108 @@ def parse_action(block: str) -> tuple[str, dict, str]:
 
 def truncate(s: str, limit: int = 4000) -> str:
     return s if len(s) <= limit else s[:limit] + "\n...[truncated]..."
+
+
+def _parse_thought_or_finish(block: str) -> tuple[str, dict, str]:
+    """
+    Accepts exactly one line:
+      - Finish[{"message":"..."}]
+      - Thought[...]
+    Returns: (name, args, matched)
+      - Finish -> args is the parsed JSON object (must contain "message": str)
+      - Thought -> args is {"text": "<sentence>"}
+    """
+    import json, re
+
+    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
+    line = lines[-1]
+    # if len(lines) != 1:
+    #     raise ValueError("Thought/Finish agent must output exactly one non-empty line.")
+    # line = lines[0]
+
+    m = re.match(r'^(\w+)\[(.*)\]$', line, re.S)
+    if not m:
+        m2 = re.match(r'^Thought:\s*(.+)$', line)
+        if not m2:
+            raise ValueError("No action found (expected Finish[...] or Thought[...] or 'Thought: <text>').")
+        name = "Thought"
+        inner = m2.group(1)
+        matched = m2.group(0).strip()
+    else:
+        name, inner = m.group(1), m.group(2)
+        matched = m.group(0).strip()
+
+    if name == "Finish":
+        inner = inner.strip()
+        args = {} if inner == "" else json.loads(inner)
+        if not isinstance(args, dict):
+            raise ValueError("Finish[...] must contain a JSON object.")
+        if "message" not in args or not isinstance(args["message"], str) or not args["message"].strip():
+            raise ValueError('Finish JSON must include non-empty "message": "<text>".')
+        return "Finish", args, matched
+
+    if name == "Thought":
+        content = inner.strip()
+        # Accept either raw text or a quoted JSON string
+        if (content.startswith('"') and content.endswith('"')) or (content.startswith("'") and content.endswith("'")):
+            try:
+                thought_text = json.loads(content)
+            except Exception:
+                # fall back to stripping quotes if json decoding fails
+                thought_text = content[1:-1]
+        else:
+            thought_text = content
+
+        if not isinstance(thought_text, str):
+            raise ValueError("Thought[...] must contain a single brief string.")
+        thought_text = thought_text.strip()
+        if not thought_text:
+            raise ValueError("Thought text must be non-empty.")
+        if "\n" in thought_text:
+            raise ValueError("Thought must be a single line (no newlines).")
+
+        return "Thought", {"text": thought_text}, matched
+
+    raise ValueError("Unknown action for this stage: expected Finish or Thought.")
+
+
+def _parse_patch(block: str) -> tuple[str, dict, str]:
+    """
+    Accepts exactly one line:
+      - Patch[{"start":<int>,"end":<int>,"text":"<new code>"}]
+    Returns: (name, args, matched) with args validated.
+    """
+    import json, re
+
+    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
+    if len(lines) != 1:
+        raise ValueError("Patch agent must output exactly one non-empty line.")
+    line = lines[0]
+
+    m = re.match(r'^Patch\[(.*)\]$', line, re.S)
+    if not m:
+        raise ValueError("Expected a single 'Patch[...]' line.")
+    inner = m.group(1).strip()
+    matched = m.group(0).strip()
+
+    args = {} if inner == "" else json.loads(inner)
+    if not isinstance(args, dict):
+        raise ValueError("Patch[...] must contain a JSON object.")
+
+    # Validate required keys
+    for key in ("start", "end", "text"):
+        if key not in args:
+            raise ValueError(f"Patch missing required key '{key}'.")
+    # Coerce/validate types
+    try:
+        args["start"] = int(args["start"])
+        args["end"] = int(args["end"])
+    except Exception:
+        raise ValueError("'start' and 'end' must be integers.")
+    if not isinstance(args["text"], str):
+        raise ValueError("'text' must be a string.")
+
+    return "Patch", args, matched
 
 
 if __name__ == "__main__":
