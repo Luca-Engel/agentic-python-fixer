@@ -14,7 +14,6 @@ Strict ReAct format (ONE thought and ONE action per iteration — parser-enforce
 - Do not include any extra narration, code fences, or surrounding text. Output must be strictly the two lines described.
 
 Allowed actions:
-- Thought[<brief reasoning about next step>]
 - Patch[{"start": <int>, "end": <int>, "text": "<new code>"}]
         (*`start`* and *`end`* are the line offsets in the file (1-based).
          To **replace** an existing line with index `x`, set `"start": x` and `"end": x+1`.
