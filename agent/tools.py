@@ -2,6 +2,7 @@ import os, re, glob, json
 from dataclasses import dataclass
 from agent.patches import SpanPatch, apply_span_patch
 from agent.docker_sandbox import run_pytests_docker
+from eval.task_workspace import TaskWorkspace
 
 
 @dataclass
@@ -48,7 +49,9 @@ class Toolset:
             mem_mb=mem_mb,
             cpu_quota=1.0,  # adjust via config if you want fractional CPUs
         )
-        return ToolResult(code == 0, out)
+        # since it is not actual pytests we run, treat exit code 5 (no tests collected) as success
+        # Failure means that assetions failed and then the exit code is not 5
+        return ToolResult(code == 5, out)
 
     def search_repo(self, query: str, max_hits: int = 20) -> ToolResult:
         hits = []
@@ -66,8 +69,49 @@ class Toolset:
 
 
 
+# if __name__ == "__main__":
+#     src = """from typing import List
+#
+#
+# def has_close_elements(numbers: List[float], threshold: float) -> bool:
+#     for idx, elem in enumerate(numbers):
+#         for idx2, elem2 in enumerate(numbers):
+#             if idx != idx2:
+#                 distance = elem - elem2
+#                 if distance < threshold:
+#                     return True
+#
+#     return False"""
+#
+#     text = """                distance = abs(elem - elem2)"""
+#     start = 8
+#     end = 9
+#
+#     sp = SpanPatch(path="p", start=start, end=end, text=text)
+#     dst = apply_span_patch(src, sp)
+#
+#     print("after patch:")
+#     print(dst)
+
+
 if __name__ == "__main__":
-    src = """from typing import List
+    correct_code = """
+from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    for idx, elem in enumerate(numbers):
+        for idx2, elem2 in enumerate(numbers):
+            if idx != idx2:
+                distance = abs(elem - elem2)
+                if distance < threshold:
+                    return True
+ 
+    return False
+"""
+
+    buggy_code = """
+from typing import List
 
 
 def has_close_elements(numbers: List[float], threshold: float) -> bool:
@@ -77,15 +121,41 @@ def has_close_elements(numbers: List[float], threshold: float) -> bool:
                 distance = elem - elem2
                 if distance < threshold:
                     return True
+ 
+    return False
+"""
 
-    return False"""
+    test_code = """
+def check(has_close_elements):
+    assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.3) == True
+    assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.05) == False
+    assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.95) == True
+    assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.8) == False
+    assert has_close_elements([1.0, 2.0, 3.0, 4.0, 5.0, 2.0], 0.1) == True
+    assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 1.0) == True
+    assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 0.5) == False
 
-    text = """                distance = abs(elem - elem2)"""
-    start = 8
-    end = 9
+check(has_close_elements)
 
-    sp = SpanPatch(path="p", start=start, end=end, text=text)
-    dst = apply_span_patch(src, sp)
+    """
 
-    print("after patch:")
-    print(dst)
+    task = {
+        "task_id": "id_123",
+        "entry_file": "task.py",
+        "entry_point": "has_close_elements",
+        "entire_buggy_code": buggy_code, # correct_code,
+        "test": test_code,
+    }
+
+    ws = TaskWorkspace(task)
+    tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
+
+    # code, output = run_pytests_docker(
+    #     workdir=tools.workdir
+    # )
+
+    tool_res = tools.run_pytests()
+    print("ToolResult:", tool_res)
+
+    # print("Exit code:", code)
+    # print("Output:\n", output)

@@ -5,6 +5,7 @@ def add_file_names_to_row(row):
     return {
         "task_id": row["task_id"].replace("/", "_"),
         "entire_buggy_code": f"""{row["declaration"]}    '''\n{row["docstring"]}\n    '''\n{row["buggy_solution"]}""",
+        # "entire_buggy_code": f"""{row["declaration"]}{row["canonical_solution"]}""",
         "entry_file": "task.py",
         "test_file": "test_task.py",
     }

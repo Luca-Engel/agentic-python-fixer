@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import sys
 from typing import Tuple, List
 
 SANDBOX_IMAGE = os.environ.get("AF_SANDBOX_IMAGE", "agentic-fixer-sandbox")
@@ -77,6 +76,20 @@ def run_pytests_docker(
         *extra_pytest_args,
     ]
 
+    # cmd = [
+    #     "docker", "run", "--rm",
+    #     *cpu_flag, *mem_flag, *pid_flag, *sec_flags,
+    #     *mount, *user, *envs,
+    #     "-w", "/workspace",
+    #     SANDBOX_IMAGE,
+    #     "python", "-m", "pytest",
+    #     "--disable-warnings",
+    #     "-r", "a",
+    #     "--maxfail=1",  # faster feedback
+    #     "--timeout", str(timeout_s),
+    #     *extra_pytest_args,
+    # ]
+
     try:
         proc = subprocess.run(
             cmd,
@@ -90,3 +103,6 @@ def run_pytests_docker(
         # If Docker wrapper times out (unlikely due to pytest-timeout), report it
         out = (e.stdout or "") + "\n[agent] Container timed out."
         return 124, out
+
+
+
