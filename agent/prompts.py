@@ -2,7 +2,7 @@ SYSTEM_PROMPT = """You are a Python bug-fixing assistant.
 You will iteratively: (1) analyze code/tests and failure traces, (2) propose small patches,
 (3) re-run tests, (4) stop when tests pass. Keep changes minimal and safe."""
 
-REACT_INSTRUCTIONS = """
+REACT_INSTRUCTIONS = r"""
 Strict ReAct format (ONE thought and ONE action per iteration — parser-enforced):
 
 - Output exactly ONE line starting with `Thought:` and exactly ONE line starting with `Action:`. No other `Thought` or `Action` lines allowed.
@@ -23,8 +23,8 @@ Allowed actions:
 - Finish[<brief summary of the fix>]
 
 Examples — valid:
-Thought: The test fails because line 12 does not return 0. Replace this line with the correct return statement.
-Action: Patch[{"start":12,"end":13,"text":"    return 0 \n"}]
+Thought: The test fails because line 3 does not increment the index i. Add a line to increment i.
+Action: Patch[{"start":3,"end":3,"text":"    i += 1 \n"}]
 
 Examples — invalid (will be rejected by the parser):
 Thought: First thought.
@@ -41,8 +41,8 @@ FEW_SHOT = r"""
 Question: The code shown below (always the updated version is displayed, so if you have previously changed something, these changes will be included in the code below) has a bug.
 When executing its tests, the following output is produced:
 <output of failed tests omitted for brevity>
-Thought: The if statement is currently '>' but needs to be '>='. change this
-Action: Patch[{"start" : 12, "end" : 12, "text":"    if value_1 >= value_2:\n"}]
+Thought: The if statement on line 12 is currently '>' but needs to be '>='. Fix this line.
+Action: Patch[{"start" : 12, "end" : 13, "text":"    if value_1 >= value_2: \n"}]
 Observation: Patch applied. All tests passed.
 Thought: Done.
 Action: Finish[]
@@ -63,7 +63,11 @@ def get_task_header() -> str:
     )
 
 
-def get_current_code_and_tests_prompt_part(python_code: str, python_tests: str, tests_run_result: str) -> str:
+def get_current_code_and_tests_prompt_part(
+        python_code: str,
+        python_tests: str,
+        tests_run_result: str
+) -> str:
     python_code_lines = python_code.splitlines()
     numbered_code = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(python_code_lines))
 
@@ -75,3 +79,24 @@ def get_current_code_and_tests_prompt_part(python_code: str, python_tests: str, 
             + f"```Python\n{python_tests}\n```"
             + f"\n\nLatest test run output: {tests_run_result}"
     )
+
+
+def get_llm_prompt(
+        python_code: str,
+        python_tests: str,
+        tests_run_result: str,
+        problem_explanation: str,
+        current_trajectory: list,
+) -> str:
+    current_code_and_tests = get_current_code_and_tests_prompt_part(
+        python_code=python_code,
+        python_tests=python_tests,
+        tests_run_result=tests_run_result,
+    )
+    prompt = problem_explanation
+    if current_trajectory:
+        prompt += "\n\nPrevious ReAct iterations:\n" + "\n".join(current_trajectory)
+    else:
+        prompt += "\n\nNo previous ReAct iterations yet, please start."
+    prompt += current_code_and_tests
+    return prompt

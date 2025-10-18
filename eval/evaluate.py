@@ -23,76 +23,57 @@ def make_llm(model_cfg: ModelConfig):
     """
     # print("Loading model:", model_cfg.model_name)
     # tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
-    # model = AutoModelForCausalLM.from_pretrained(model_cfg.model_name, device_map="auto")
-    # print("Model loaded.")
-    # gen = pipeline(
-    #     "text-generation",
-    #     model=model,
-    #     tokenizer=tok,
-    #     return_full_text=False,
-    #     temperature=model_cfg.temperature,
-    #     top_p=model_cfg.top_p,
-    #     top_k=model_cfg.top_k,
-    #     min_p=model_cfg.min_p,
-    #     max_new_tokens=model_cfg.max_new_tokens
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     model_cfg.model_name,
+    #     dtype="auto",
+    #     device_map="auto",
     # )
+    # print("Model loaded.")
     #
     # def _call(prompt: str) -> str:
-    #     out = gen(prompt, num_return_sequences=1)[0]["generated_text"]
-    #     return out
-    print("Loading model:", model_cfg.model_name)
-    tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_cfg.model_name,
-        dtype="auto",
-        device_map="auto",
-    )
-    print("Model loaded.")
-
-    def _call(prompt: str) -> str:
-        # Prepare a chat-style input with thinking disabled (non-thinking mode)
-        messages = [{"role": "user", "content": prompt}]
-        text = tok.apply_chat_template(
-            messages,
-            tokenize=model_cfg.tokenize,
-            add_generation_prompt=model_cfg.add_generation_prompt,
-            enable_thinking=model_cfg.enable_thinking,
-        )
-
-        # Tokenize and move tensors to model device
-        inputs = tok(text, return_tensors="pt").to(model.device)
-
-        # Generate with non-thinking recommended sampling parameters
-        gen = model.generate(
-            **inputs,
-            max_new_tokens=model_cfg.max_new_tokens,
-            do_sample=model_cfg.do_sample,
-            temperature=model_cfg.temperature,
-            top_p=model_cfg.top_p,
-            top_k=model_cfg.top_k,
-        )
-
-        # Extract only the generated portion and decode
-        output_ids = gen[0][len(inputs.input_ids[0]):].tolist()
-        content = tok.decode(output_ids, skip_special_tokens=True).strip("\n")
-        return content
-
-    # load_dotenv()  # loads .env into environment
-    # api_key = os.getenv("OPENAI_API_KEY")
-    # env_model = os.getenv("OPENAI_MODEL")
-    # if not api_key:
-    #     raise RuntimeError("OPENAI_API_KEY not set in environment or .env")
-    #
-    # _client = OpenAI(api_key=api_key)
-    #
-    # def _call(prompt: str) -> str:
-    #
-    #     resp = _client.chat.completions.create(
-    #         model=env_model,
-    #         messages=[{"role": "user", "content": prompt}],
+    #     # Prepare a chat-style input with thinking disabled (non-thinking mode)
+    #     messages = [{"role": "user", "content": prompt}]
+    #     text = tok.apply_chat_template(
+    #         messages,
+    #         tokenize=model_cfg.tokenize,
+    #         add_generation_prompt=model_cfg.add_generation_prompt,
+    #         enable_thinking=model_cfg.enable_thinking,
     #     )
     #
-    #     return resp.choices[0].message.content
+    #     # Tokenize and move tensors to model device
+    #     inputs = tok(text, return_tensors="pt").to(model.device)
+    #
+    #     # Generate with non-thinking recommended sampling parameters
+    #     gen = model.generate(
+    #         **inputs,
+    #         max_new_tokens=model_cfg.max_new_tokens,
+    #         do_sample=model_cfg.do_sample,
+    #         temperature=model_cfg.temperature,
+    #         top_p=model_cfg.top_p,
+    #         top_k=model_cfg.top_k,
+    #     )
+    #
+    #     # Extract only the generated portion and decode
+    #     output_ids = gen[0][len(inputs.input_ids[0]):].tolist()
+    #     content = tok.decode(output_ids, skip_special_tokens=True).strip("\n")
+    #     return content
+
+    load_dotenv()  # loads .env into environment
+    api_key = os.getenv("OPENAI_API_KEY")
+    env_model = os.getenv("OPENAI_MODEL")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set in environment or .env")
+
+    _client = OpenAI(api_key=api_key)
+
+    def _call(prompt: str) -> str:
+
+        resp = _client.chat.completions.create(
+            model=env_model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return resp.choices[0].message.content
 
     return _call
 
@@ -104,8 +85,7 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
         llm = make_llm(model_cfg)
         loop = ReActLoop(llm=llm, tools=tools, max_iters=rt_cfg.max_iters)
         tests_output = tools.run_pytests().output
-        header = get_task_header()
-        res = loop.run(task_header=header)
+        res = loop.run()
         # Final adjudication: run tests one last time
         ok = tools.run_pytests(timeout_s=rt_cfg.test_timeout_s,
                                mem_mb=rt_cfg.mem_limit_mb,
