@@ -28,7 +28,11 @@ class Toolset:
 
         print("3.1 Before patch:")
         print(src)
-        text_with_indents = "    " * nb_indents + text.strip() + "\n"
+        # text_with_indents = "    " * nb_indents + text.strip() + "\n"
+        lines = text.strip().splitlines()
+        indent = "    " * nb_indents
+        text_with_indents = "\n".join(indent + line for line in lines) + "\n"
+
         sp = SpanPatch(path=p, start=start, end=end, text=text_with_indents)
         dst = apply_span_patch(src, sp)
         print(f"3.2 After patch (start={start}, end={end}):")

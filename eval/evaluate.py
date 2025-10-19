@@ -95,7 +95,7 @@ def _instantiate_model_hf_api():
             top_p=0.95,
             # top_k=20,
             # min_p=0,
-            max_tokens=5000,
+            max_tokens=10000,
             seed=42
             # Non-thinking mode
             # temperature=0.7,

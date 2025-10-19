@@ -1,17 +1,40 @@
 SYSTEM_PROMPT = """You are a Python bug-fixing assistant.
-You will iteratively: (1) analyze code/tests and failure traces, (2) propose small patches,
-(3) re-run tests, (4) stop when tests pass. Keep changes minimal and safe.
 
-NOTE THAT THE TESTS ARE THE ORACLE: YOUR GOAL IS TO MAKE ALL TESTS PASS. ONLY MAKE CHANGES TO THE CODE, NOT THE TESTS.
+Goal: make the provided code pass ALL given tests. The tests are the single source of truth.
+
+Rules (must follow):
+- Edit ONLY the main code (never the tests).
+- Make ONE minimal change per iteration.
+- Touch ONE contiguous region in ONE file.
+- Target the FIRST failing traceback frame / assertion only.
+- Line numbers in code are 1-based. Ranges are half-open [start, end).
+- Output MUST follow the requested JSON format exactly (valid JSON on a single line).
 """
 
-
 THOUGHT_AGENT_INSTRUCTIONS = r"""
-Please first BRIEFLY reason about what your task is, then follow this strict output format — EXACTLY ONE LINE:
-Thought[<single brief sentence describing the next minimal change>]
+You are the THOUGHT agent.
 
-The explanation should contain what changes should be made and if a statement should be inserted at a given line or replace an existing line.
-MAKE SURE TO FOLLOW THE FORMAT EXACTLY AND END YOUR OUTPUT WITH THE Thought[...] LINE.
+Task:
+- VERY BRIEFLY infer why the FIRST failing assertion/traceback frame fails and plan ONE minimal code edit in ONE contiguous region to fix it now.
+
+Scope policy (this iteration):
+- Address ONLY the first failing frame.
+- Plan exactly ONE minimal edit (insert OR replace OR delete).
+- Specify exact line numbers (1-based). Use [start,end) semantics for later patching.
+
+Output format (exactly ONE line):
+Thought[<one brief sentence describing the next minimal code change>]
+
+The sentence MUST:
+- State the action (Insert/Replace/Delete),
+- Give the exact line number(s),
+- Include the precise code intent or new statement.
+
+Examples:
+- Thought[Replace line 42 with 'return False if value is None else True']
+- Thought[Insert 'if value is None:\n    return 0' before line 20 to handle None input]
+
+Do not include explanations, bullet points, or extra text.
 """
 
 THOUGHT_AGENT_QUICK_REMINDER = r"""
@@ -20,32 +43,36 @@ Thought[<single brief sentence describing the next minimal change>]
 """
 
 PATCH_AGENT_INSTRUCTIONS = r"""
-Please first BRIEFLY reason about what your task is, then follow this strict output format — EXACTLY ONE LINE:
-Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code with newlines as needed>"}]
+You now implement the Thought as a precise, minimal code patch.
 
-CRITICAL RULES (memorize before output):
-- The range is half-open: it replaces/affects lines in [start, end).
-- Therefore:
-  • To REPLACE exactly 1 line x: start = x, end = x+1. (Never set end == start here.)
-  • To INSERT a new line BEFORE line x: start = x, end = x. (Insertion has end == start.)
-  • To REPLACE N lines starting at s: start = s, end = s+N.
-- Ensure "text" indentation matches surrounding code. Use nb_indents = number of 4-space levels to apply to every line in "text".
-- `text` is the new content (may contain only one line) that will replace the range.
+First, VERY BRIEFLY reason about how to translate the Thought into a Patch.
+Then, output EXACTLY ONE LINE in this strict JSON-like format:
+Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
 
-EXAMPLES:
-Thought: "Replace line 16 with 'a = b + c'"
-→ Patch[{"start":16,"end":17,"nb_indents":4,"text":"a = b + c"}]
+Rules:
+- Half-open range [start, end):
+    - Replace 1 line x: start=x, end=x+1
+    - Insert before x: start=x, end=x
+    - Replace N lines: start=s, end=s+N
+- nb_indents = number of 4-space indentation levels to apply uniformly to every line in "text".
+- Preserve correct syntax, indentation, and spacing.
+- Modify EXACTLY ONE contiguous range [start, end) in EXACTLY ONE file per iteration.
+- If the Thought implies multiple regions, implement ONLY the first region and stop.
+- Never modify or refer to the tests.
 
-Thought: "Insert 'return False' before line 20"
-→ Patch[{"start":20,"end":20,"nb_indents":1,"text":"return False"}]
+Examples:
+Replace line 12 with `return False`
+  → Patch[{"start":12,"end":13,"nb_indents":1,"text":"return False"}]
 
+Insert `if value is None: return 0` before line 20
+  → Patch[{"start":20,"end":20,"nb_indents":2,"text":"if value is None:\n    return 0"}]
 
-MAKE SURE TO FOLLOW THE FORMAT EXACTLY AND END YOUR OUTPUT WITH THE Patch[...] LINE.
+End your output with the Patch[...] line only — no commentary.
 """
 
 PATCH_AGENT_QUICK_REMINDER = r"""
 REMEMBER TO FINISH YOUR ANSWER FOLLOWING THIS FORMAT EXACTLY AND ENSURE THAT THE INDENTATION OF THE NEW CODE IS CORRECT:
-Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code with newlines as needed>"}]
+Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
 """
 
 
@@ -53,12 +80,11 @@ def _format_code_and_tests(python_code: str, python_tests: str, tests_run_result
     python_code_lines = python_code.splitlines()
     numbered_code = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(python_code_lines))
     return (
-            "\n\nThe current code is as follows (line numbers are added for clarity; "
-            "provide any fix with ONLY THE CODE content, not line numbers):\n"
-            + f"```Python\n{numbered_code}\n```"
-            + "\n\nThe tests are as follows:\n"
-            + f"```Python\n{python_tests}\n```"
-            + f"\n\nLatest test run output: {tests_run_result}"
+        "\n\n=== CURRENT CODE (with line numbers) ===\n"
+        f"```python\n{numbered_code}\n```"
+        "\n\n=== TEST SUITE ===\n"
+        f"```python\n{python_tests}\n```"
+        f"\n\n=== TEST RESULTS ==={tests_run_result}"
     )
 
 
@@ -75,6 +101,10 @@ def build_thought_prompt(
             + "\n\nYou are the THOUGHT agent."
             + THOUGHT_AGENT_INSTRUCTIONS
             + "\n\nPrevious steps (last few):\n" + traj
+            + "\n\nImportant: You are continuing an iterative repair loop."
+              " Use insights from previous steps but DO NOT repeat prior failed edits."
+              " Base your reasoning only on the latest test failures and current code."
+              " Scope for this iteration: change only ONE contiguous code region and target the earliest/first failing assertion or traceback frame."
             + _format_code_and_tests(python_code, python_tests, tests_run_result)
             + THOUGHT_AGENT_QUICK_REMINDER
     )
@@ -94,6 +124,10 @@ def build_patch_prompt(
             + PATCH_AGENT_INSTRUCTIONS
             + "\n\nThought to implement (verbatim):\n" + thought_line + "\n"
             + "Previous steps (last few):\n" + traj
+            + "\n\nImportant: You are in an iterative bug-fixing loop."
+              " Apply the given Thought exactly as written."
+              " Do not re-analyze the problem or introduce new reasoning."
+              " Modify EXACTLY ONE contiguous code region this iteration."
             + _format_code_and_tests(python_code, python_tests, tests_run_result)
             + PATCH_AGENT_QUICK_REMINDER
     )
