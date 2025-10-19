@@ -9,7 +9,7 @@ SANDBOX_IMAGE = os.environ.get("AF_SANDBOX_IMAGE", "agentic-fixer-sandbox")
 def _ensure_docker() -> None:
     if not shutil.which("docker"):
         raise RuntimeError("Docker not found on PATH. Please install Docker Desktop/Engine.")
-    # optional: verify image present
+
     try:
         subprocess.run(["docker", "image", "inspect", SANDBOX_IMAGE],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -75,20 +75,6 @@ def run_pytests_docker(
         "--timeout", str(timeout_s),
         *extra_pytest_args,
     ]
-
-    # cmd = [
-    #     "docker", "run", "--rm",
-    #     *cpu_flag, *mem_flag, *pid_flag, *sec_flags,
-    #     *mount, *user, *envs,
-    #     "-w", "/workspace",
-    #     SANDBOX_IMAGE,
-    #     "python", "-m", "pytest",
-    #     "--disable-warnings",
-    #     "-r", "a",
-    #     "--maxfail=1",  # faster feedback
-    #     "--timeout", str(timeout_s),
-    #     *extra_pytest_args,
-    # ]
 
     try:
         proc = subprocess.run(

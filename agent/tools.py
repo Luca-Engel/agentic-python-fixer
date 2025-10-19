@@ -13,9 +13,8 @@ class ToolResult:
 
 
 class Toolset:
-    def __init__(self, workdir: str, sandbox_runner):
+    def __init__(self, workdir: str):
         self.workdir = workdir
-        self.sandbox_runner = sandbox_runner
 
     def open_file(self, path: str) -> ToolResult:
         p = os.path.join(self.workdir, path)
@@ -50,14 +49,14 @@ class Toolset:
 
         return ToolResult(True, "Wrote patch.")
 
-    def run_pytests(self, timeout_s: int = 10, mem_mb: int = 2048, cpu_time_s: int = 10):
-        # cpu_time_s is not used directly; we expose 'cpu_quota' via cpus param
+    def run_pytests(self, timeout_s: int = 10, mem_mb: int = 2048):
         code, out = run_pytests_docker(
             workdir=self.workdir,
             timeout_s=timeout_s,
             mem_mb=mem_mb,
             cpu_quota=1.0,  # adjust via config if you want fractional CPUs
         )
+
         # since it is not actual pytests we run, treat exit code 5 (no tests collected) as success
         # Failure means that assetions failed and then the exit code is not 5
         return ToolResult(code == 5, out)
@@ -77,30 +76,6 @@ class Toolset:
         return ToolResult(True, "\n".join(hits) or "(no hits)")
 
 
-
-# if __name__ == "__main__":
-#     src = """from typing import List
-#
-#
-# def has_close_elements(numbers: List[float], threshold: float) -> bool:
-#     for idx, elem in enumerate(numbers):
-#         for idx2, elem2 in enumerate(numbers):
-#             if idx != idx2:
-#                 distance = elem - elem2
-#                 if distance < threshold:
-#                     return True
-#
-#     return False"""
-#
-#     text = """                distance = abs(elem - elem2)"""
-#     start = 8
-#     end = 9
-#
-#     sp = SpanPatch(path="p", start=start, end=end, text=text)
-#     dst = apply_span_patch(src, sp)
-#
-#     print("after patch:")
-#     print(dst)
 
 
 if __name__ == "__main__":
@@ -157,7 +132,7 @@ check(has_close_elements)
     }
 
     ws = TaskWorkspace(task)
-    tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
+    tools = Toolset(workdir=ws.path())
 
     # code, output = run_pytests_docker(
     #     workdir=tools.workdir

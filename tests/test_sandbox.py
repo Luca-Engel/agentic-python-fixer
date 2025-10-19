@@ -10,5 +10,5 @@ def test_pytest_runs():
         f.write("def f():\n    return 1\n")
     with open(os.path.join(tmp, "test_t.py"), "w") as f:
         f.write("from t import f\n\ndef test_ok():\n    assert f()==1\n")
-    code, out = run_pytests_docker(tmp, timeout_s=5, mem_mb=512, cpu_time_s=5)
+    code, out = run_pytests_docker(tmp, timeout_s=5, mem_mb=512)
     assert code == 0, out

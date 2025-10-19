@@ -2,9 +2,8 @@ import json
 import re
 from typing import Dict, Any, List, Tuple
 
-from agent.tools import Toolset
 from agent.prompts import build_thought_prompt, build_patch_prompt
-import black
+from agent.tools import Toolset
 
 
 class ReActLoop:
@@ -56,7 +55,7 @@ class ReActLoop:
 
             try:
                 print("2.1 parsing thought")
-                kind, payload, matched = _parse_thought(thought_out)
+                kind, payload, matched = parse_thought(thought_out)
                 print("2.2 thought parsed")
             except Exception as e:
                 print(" -> error parsing Thought/Finish output:", e)
@@ -86,7 +85,7 @@ class ReActLoop:
             print("4. Patch Completion:\n", patch_out)
 
             try:
-                kind, patch_args, matched = _parse_patch(patch_out)
+                kind, patch_args, matched = parse_patch(patch_out)
                 self.trajectory.append(f"Action: Patch[{json.dumps(patch_args, separators=(',', ':'))}]")
                 obs = self.tools.write_file(**patch_args).output
             except Exception as e:
@@ -108,28 +107,7 @@ class ReActLoop:
         return {"status": "budget_exhausted", "trajectory": self.trajectory}
 
 
-def parse_action(block: str) -> tuple[str, dict, str]:
-    match = re.search(r"(\w+)\[(.*)\]", block, re.S)
-    if not match:
-        raise ValueError("No action found")
-
-    matched = match.group(0)  # e.g. `Finish[...]`
-    name, arg = match.group(1), match.group(2)
-
-    if name == "Thought":
-        args = {}
-    elif name == "Patch":
-        print(" -> patching with arg:", arg)
-        args = json.loads(arg)
-    elif name == "Finish":
-        args = {}
-    else:
-        raise ValueError(f"Unknown action: {name}")
-
-    return name, args, matched
-
-
-def _parse_thought(block: str) -> tuple[str, dict, str]:
+def parse_thought(block: str) -> tuple[str, dict, str]:
     """
     Accepts exactly one line:
       - <random text allowed>Thought[...]
@@ -199,7 +177,7 @@ def match_thought(block: str) -> tuple[str, str | Any, str]:
     return inner_, matched_, name_
 
 
-def _parse_patch(block: str) -> tuple[str, dict, str]:
+def parse_patch(block: str) -> tuple[str, dict, str]:
     """
     Accepts exactly one line:
       - Patch[{"start":<int>,"end":<int>,"text":"<new code>"}]

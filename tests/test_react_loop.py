@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from agent.react_loop import match_thought, _parse_thought, match_patch, _parse_patch, parse_action
+from agent.react_loop import match_thought, parse_thought, match_patch, parse_patch
 
 
 @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ def test_match_thought_prefers_last_occurrence_from_bottom():
     ],
 )
 def test__parse_thought_accepts_quoted_and_unquoted(block, expected):
-    kind, payload, matched = _parse_thought(block)
+    kind, payload, matched = parse_thought(block)
     assert kind == "Thought"
     assert payload["text"] == expected
     assert "Thought" in matched
@@ -72,7 +72,7 @@ def test__parse_thought_accepts_quoted_and_unquoted(block, expected):
 )
 def test__parse_thought_rejects_invalid(block):
     with pytest.raises(ValueError):
-        _parse_thought(block)
+        parse_thought(block)
 
 
 @pytest.mark.parametrize(
@@ -106,7 +106,7 @@ def test_match_patch_picks_bottom_most():
 
 def test__parse_patch_happy_path_and_coercions():
     block = 'Patch[{"start":"1","end":"3","text":"new code"}]'
-    kind, args, matched = _parse_patch(block)
+    kind, args, matched = parse_patch(block)
     assert kind == "Patch"
     assert args["start"] == 1 and args["end"] == 3
     assert isinstance(args.get("nb_indents", 0), int)
@@ -127,31 +127,9 @@ def test__parse_patch_happy_path_and_coercions():
 )
 def test__parse_patch_invalid(block):
     with pytest.raises(ValueError):
-        _parse_patch(block)
+        parse_patch(block)
 
 
-def test_parse_action_thought():
-    name, args, matched = parse_action('Thought[Do a thing]')
-    assert name == "Thought"
-    assert args == {}  # Thought returns empty args here
-    assert "Thought[" in matched
-
-
-def test_parse_action_patch():
-    block = 'Patch[{"start":0,"end":2,"text":"xx"}]'
-    name, args, matched = parse_action(block)
-    assert name == "Patch"
-    assert args == {"start": 0, "end": 2, "text": "xx"}
-
-
-def test_parse_action_unknown_tool_raises():
-    with pytest.raises(ValueError):
-        parse_action("Run[{}]")
-
-
-# ----------------------------
-# Robustness / integration-like sanity
-# ----------------------------
 def test_parse_then_patch_roundtrip_with_matchers():
     # Simulate LLM output that includes extra lines; we use the matchers then the strict parsers
     messy = """
@@ -160,7 +138,7 @@ def test_parse_then_patch_roundtrip_with_matchers():
     extra trailing
     """
     inner, matched = match_patch(messy)
-    kind, args, matched2 = _parse_patch(matched)
+    kind, args, matched2 = parse_patch(matched)
     assert kind == "Patch"
     assert args["start"] == 4 and args["end"] == 9 and args["text"] == "replacement"
 
@@ -173,6 +151,6 @@ def test_parse_then_thought_roundtrip_with_matchers():
     """
     inner, matched, name = match_thought(messy)
     assert name == "Thought"
-    kind, payload, matched2 = _parse_thought(matched)
+    kind, payload, matched2 = parse_thought(matched)
     assert kind == "Thought"
     assert payload["text"] == "Keep patches minimal and focused."
