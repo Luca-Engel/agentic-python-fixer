@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, Any, List, Tuple
 
 from agent.tools import Toolset
@@ -45,19 +46,22 @@ class ReActLoop:
             # 1) THOUGHT/FINISH AGENT
             thought_prompt = build_thought_prompt(
                 python_code=self.tools.open_file("task.py").output.strip(),
-                python_tests=self.tools.open_file("test_task.py").output.strip(),
+                python_tests=self.tools.open_file("raw_test_task.py").output.strip(),
                 tests_run_result=test_run_results,
                 current_trajectory=self.trajectory,
             )
-            print("1. Thought Prompt:\n", thought_prompt)
+            print("1. Thought Being prompted")
             thought_out = self.llm_thought(thought_prompt)
             print("2. Thought Completion:\n", thought_out)
 
             try:
-                kind, payload, matched = _parse_thought_or_finish(thought_out)
+                print("2.1 parsing thought")
+                kind, payload, matched = _parse_thought(thought_out)
+                print("2.2 thought parsed")
             except Exception as e:
                 print(" -> error parsing Thought/Finish output:", e)
-                self.trajectory.append(f"Error parsing your Thought output, retry and ensure it is concise and follows the format exactly.")
+                self.trajectory.append(
+                    f"Error parsing your Thought output, retry and ensure it is concise and follows the format exactly.")
                 continue
             if kind == "Finish":
                 self.trajectory.append(f"Action: Finish[{json.dumps(payload, separators=(',', ':'))}]")
@@ -72,26 +76,32 @@ class ReActLoop:
             # 2) PATCH AGENT
             patch_prompt = build_patch_prompt(
                 python_code=self.tools.open_file("task.py").output.strip(),
-                python_tests=self.tools.open_file("test_task.py").output.strip(),
+                python_tests=self.tools.open_file("raw_test_task.py").output.strip(),
                 tests_run_result=test_run_results,
                 thought_line=thought_line,
                 current_trajectory=self.trajectory,
             )
-            print("3. Patch Prompt:\n", patch_prompt)
+            print("3. Patch Being Prompted")
             patch_out = self.llm_patch(patch_prompt)
             print("4. Patch Completion:\n", patch_out)
 
-            kind, patch_args, matched = _parse_patch(patch_out)
-            self.trajectory.append(f"Action: Patch[{json.dumps(patch_args, separators=(',', ':'))}]")
-
-            obs = self.tools.write_file(**patch_args).output
+            try:
+                kind, patch_args, matched = _parse_patch(patch_out)
+                self.trajectory.append(f"Action: Patch[{json.dumps(patch_args, separators=(',', ':'))}]")
+                obs = self.tools.write_file(**patch_args).output
+            except Exception as e:
+                print(" -> error parsing Patch output:", e)
+                self.trajectory.append(
+                    f"Error parsing your Patch output, retry and ensure it follows the format exactly.")
+                continue
 
             # re-run tests
             traj_test_msg, test_run_results = self._get_test_run_result({})
             self.trajectory.append(f"Observation: {obs} {traj_test_msg}")
             if "All tests passed." in traj_test_msg:
-                break
-
+                print(" -> finishing, trajectory:")
+                print("\n".join(self.trajectory))
+                return {"status": "done", "trajectory": self.trajectory}
 
         print(" -> budget exhausted, trajectory:")
         print("\n- ".join(self.trajectory))
@@ -99,8 +109,6 @@ class ReActLoop:
 
 
 def parse_action(block: str) -> tuple[str, dict, str]:
-    import json, re
-
     match = re.search(r"(\w+)\[(.*)\]", block, re.S)
     if not match:
         raise ValueError("No action found")
@@ -121,44 +129,14 @@ def parse_action(block: str) -> tuple[str, dict, str]:
     return name, args, matched
 
 
-def truncate(s: str, limit: int = 4000) -> str:
-    return s if len(s) <= limit else s[:limit] + "\n...[truncated]..."
-
-
-def _parse_thought_or_finish(block: str) -> tuple[str, dict, str]:
+def _parse_thought(block: str) -> tuple[str, dict, str]:
     """
     Accepts exactly one line:
-      - Finish[{"message":"..."}]
-      - Thought[...]
+      - <random text allowed>Thought[...]
     Returns: (name, args, matched)
-      - Finish -> args is the parsed JSON object (must contain "message": str)
       - Thought -> args is {"text": "<sentence>"}
     """
-    import json, re
-
-    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
-    i = len(lines) - 1
-    name = ""
-    inner = ""
-    matched = ""
-    while i >= 0:
-        line = lines[i]
-        m = re.match(r'^(\w+)\[(.*)\]$', line, re.S)
-        if not m:
-            m2 = re.match(r'^Thought:\s*(.+)$', line)
-            if not m2:
-                i -= 1
-                continue
-            name = "Thought"
-            inner = m2.group(1)
-            matched = m2.group(0).strip()
-        else:
-            name, inner = m.group(1), m.group(2)
-            matched = m.group(0).strip()
-
-        if name in ("Finish", "Thought"):
-            break
-
+    inner, matched, name = match_thought(block)
 
     if name == "Thought":
         content = inner.strip()
@@ -174,15 +152,51 @@ def _parse_thought_or_finish(block: str) -> tuple[str, dict, str]:
 
         if not isinstance(thought_text, str):
             raise ValueError("Thought[...] must contain a single brief string.")
+
         thought_text = thought_text.strip()
         if not thought_text:
             raise ValueError("Thought text must be non-empty.")
+
         if "\n" in thought_text:
             raise ValueError("Thought must be a single line (no newlines).")
 
         return "Thought", {"text": thought_text}, matched
 
-    raise ValueError("Unknown action for this stage: expected Finish or Thought.")
+    raise ValueError("Unknown action for this stage: expected Thought.")
+
+
+def match_thought(block: str) -> tuple[str, str | Any, str]:
+    """
+    Matches the last occurrence of Thought[...] or Thought: ... in the given block.
+    Returns: (inner, matched, name)
+    """
+    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
+    i = len(lines) - 1
+    name_ = ""
+    inner_ = ""
+    matched_ = ""
+    while i >= 0:
+        line_ = lines[i]
+        m = re.search(r'Thought\[(.*)\]$', line_, re.S)
+        if not m:
+            m2 = re.search(r'Thought:\s*(.+)$', line_)
+            if not m2:
+                i -= 1
+                continue
+            name_ = "Thought"
+            inner_ = m2.group(1)
+            matched_ = m2.group(0).strip()
+        else:
+            name_ = "Thought"
+            inner_ = m.group(1)
+            matched_ = m.group(0).strip()
+
+        if name_ in ("Thought"):
+            break
+        else:
+            # e.g., if the LLM outputs Patch[...] here, look at previous line
+            i -= 1
+    return inner_, matched_, name_
 
 
 def _parse_patch(block: str) -> tuple[str, dict, str]:
@@ -191,118 +205,50 @@ def _parse_patch(block: str) -> tuple[str, dict, str]:
       - Patch[{"start":<int>,"end":<int>,"text":"<new code>"}]
     Returns: (name, args, matched) with args validated.
     """
-    import json, re
+    inner_, matched_ = match_patch(block)
 
-    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
-    i = len(lines) - 1
-    inner = ""
-    matched = ""
-    while i >= 0:
-        line = lines[i]
-        m = re.match(r'^Patch\[(.*)\]$', line, re.S)
-        if not m:
-            i -= 1
-            continue
-
-        inner = m.group(1).strip()
-        matched = m.group(0).strip()
-        break
-
-
-
-    # if len(lines) != 1:
-    #     raise ValueError("Patch agent must output exactly one non-empty line.")
-    # line = lines[0]
-
-    # m = re.match(r'^Patch\[(.*)\]$', line, re.S)
-    # if not m:
-    #     raise ValueError("Expected a single 'Patch[...]' line.")
-    # inner = m.group(1).strip()
-    # matched = m.group(0).strip()
-
-    args = {} if inner == "" else json.loads(inner)
+    args = {} if inner_ == "" else json.loads(inner_)
     if not isinstance(args, dict):
         raise ValueError("Patch[...] must contain a JSON object.")
 
-    # Validate required keys
     for key in ("start", "end", "text"):
         if key not in args:
             raise ValueError(f"Patch missing required key '{key}'.")
-    # Coerce/validate types
+
     try:
         args["start"] = int(args["start"])
         args["end"] = int(args["end"])
         args["nb_indents"] = int(args.get("nb_indents", 0))
     except Exception:
         raise ValueError("'start' and 'end' must be integers.")
+
     if not isinstance(args["text"], str):
         raise ValueError("'text' must be a string.")
 
-    return "Patch", args, matched
+    return "Patch", args, matched_
 
 
-if __name__ == "__main__":
-    print("\n    hello\n\n".strip())
-    print("----")
-
-
-    unformatted = """
-def has_close_elements(numbers: List[float], threshold: float) -> bool:
-    '''
-Check if in given list of numbers, are any two numbers closer to each other than
-given threshold.
->>> has_close_elements([1.0, 2.0, 3.0], 0.5)
-False
->>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
-True
-    '''
-    for idx, elem in enumerate(numbers):
-        for idx2, elem2 in enumerate(numbers):
-            if idx != idx2:
-                distance = abs(elem - elem2)
-                distance = elem - elem2
-                if distance < threshold:
-                    return True
-
-    return False"""
-    print(black.format_str(unformatted, mode=black.Mode()))
-
-# if __name__ == "__main__":
-#     text = """
-# I need to do some changes to the code. The solution is to remove a line.
-# Thought[Remove the line that incorrectly returns True when two numbers are closer than the threshold.]
-# """
-#
-#     print(parse_action(text))
-
-
-
-# if __name__ == "__main__":
-#     text = """
-# def has_close_elements(numbers: List[float], threshold: float) -> bool:
-#     '''
-# Check if in given list of numbers, are any two numbers closer to each other than
-# given threshold.
-# >>> has_close_elements([1.0, 2.0, 3.0], 0.5)
-# False
-# >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
-# True
-#     '''
-#     for idx, elem in enumerate(numbers):
-#         for idx2, elem2 in enumerate(numbers):
-#             if idx != idx2:
-#                 distance = elem - elem2
-#                 if distance < threshold:
-#                     return True
-# return True
-#
-#     # return False
-#     """
-#
-#     formatted = black.format_str(text, mode=black.Mode(
-#         target_versions = {black.TargetVersion.PY36},
-#         # line_length = 10,
-#         string_normalization = False,
-#         is_pyi = False,
-#     ))
-#     print(formatted)
+def match_patch(block: str) -> tuple[str, str]:
+    """
+    Matches the last occurrence of Patch[...] or Patch: {...} in the given block.
+    Returns: (inner, matched)
+    """
+    lines = [ln.strip() for ln in block.strip().splitlines() if ln.strip()]
+    i = len(lines) - 1
+    inner_ = ""
+    matched_ = ""
+    while i >= 0:
+        line_ = lines[i]
+        m = re.search(r'Patch\[(.*)\]', line_, re.S)
+        if not m:
+            m2 = re.search(r'Patch:\s*(\{.*\})', line_, re.S)
+            if not m2:
+                i -= 1
+                continue
+            inner_ = m2.group(1).strip()
+            matched_ = m2.group(0).strip()
+        else:
+            inner_ = m.group(1).strip()
+            matched_ = m.group(0).strip()
+        break
+    return inner_, matched_

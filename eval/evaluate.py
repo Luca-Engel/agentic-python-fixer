@@ -57,6 +57,7 @@ def _instantiate_model_locally(model_cfg: ModelConfig):
 
     return _call
 
+
 def _instantiate_model_openai(model_cfg: ModelConfig):
     load_dotenv()  # loads .env into environment
     api_key = os.getenv("OPENAI_API_KEY")
@@ -67,7 +68,6 @@ def _instantiate_model_openai(model_cfg: ModelConfig):
     _client = OpenAI(api_key=api_key)
 
     def _call(prompt: str) -> str:
-
         resp = _client.chat.completions.create(
             model=env_model,
             messages=[{"role": "user", "content": prompt}],
@@ -76,6 +76,7 @@ def _instantiate_model_openai(model_cfg: ModelConfig):
         return resp.choices[0].message.content
 
     return _call
+
 
 def _instantiate_model_hf_api(model_cfg: ModelConfig):
     load_dotenv()  # loads .env into environment
@@ -113,7 +114,7 @@ def _instantiate_model_hf_api(model_cfg: ModelConfig):
         content = resp.choices[0].message.content
         print("len generated content:", len(content.split()))
 
-        return content #resp.choices[0].message.content
+        return content  #resp.choices[0].message.content
 
     return _call
 
@@ -123,10 +124,8 @@ def make_llm(model_cfg: ModelConfig):
     Create a language model callable from the given configuration.
     """
     # return _instantiate_model_locally(model_cfg)
-    # return _instantiate_model_openai(model_cfg)
-    return _instantiate_model_hf_api(model_cfg)
-
-
+    return _instantiate_model_openai(model_cfg)
+    # return _instantiate_model_hf_api(model_cfg)
 
 
 def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: RuntimeConfig):
@@ -134,7 +133,8 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
     try:
         tools = Toolset(workdir=ws.path(), sandbox_runner=run_pytests_docker)
         # llm = make_llm(model_cfg)
-        loop = ReActLoop(llm_thought=make_llm(model_cfg), llm_patch=make_llm(model_cfg), tools=tools, max_iters=rt_cfg.max_iters)
+        loop = ReActLoop(llm_thought=make_llm(model_cfg), llm_patch=make_llm(model_cfg), tools=tools,
+                         max_iters=rt_cfg.max_iters)
         tests_output = tools.run_pytests().output
         res = loop.run()
         # Final adjudication: run tests one last time
@@ -144,7 +144,7 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
         return {
             "task_id": task["task_id"],
             "status": "pass" if ok else "fail",
-            "iters": len(res.get("trajectory", [])),
+            "nb_trajectory_elems": len(res.get("trajectory", [])),
             "latest_code": tools.open_file("task.py").output.strip(),
         }
     finally:

@@ -24,7 +24,6 @@ class Toolset:
         return ToolResult(True, open(p, "r", encoding="utf-8").read())
 
     def write_file(self, start: int, end: int, nb_indents: int, text: str) -> ToolResult:
-    # def write_file(self, text: str) -> ToolResult:
         p = os.path.join(self.workdir, "task.py")
         src = open(p, "r", encoding="utf-8").read().strip()
 
@@ -36,11 +35,19 @@ class Toolset:
         print(f"3.2 After patch (start={start}, end={end}):")
         print(dst)
         print("----------------")
-        # dst = text  # replace entire file
-
 
         with open(p, "w", encoding="utf-8") as f:
             f.write(dst)
+
+        # update test_task.py
+        test_content_p = os.path.join(self.workdir, "raw_test_task.py")
+        with open(test_content_p, "r", encoding="utf-8") as f:
+            test_content = f.read()
+
+        test_p = os.path.join(self.workdir, "test_task.py")
+        with open(test_p, "w", encoding="utf-8") as f:
+            f.write(dst + "\n\n\n" + test_content)
+
         return ToolResult(True, "Wrote patch.")
 
     def run_pytests(self, timeout_s: int = 10, mem_mb: int = 2048, cpu_time_s: int = 10):

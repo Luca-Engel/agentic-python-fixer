@@ -8,9 +8,12 @@ class TaskWorkspace:
         with open(os.path.join(self.tmp, task["entry_file"]), "w", encoding="utf-8") as f:
             # f.write(task["buggy_solution"])
             f.write(task["entire_buggy_code"])
-        with open(os.path.join(self.tmp, "test_task.py"), "w", encoding="utf-8") as f:
-            f.write(f"from task import {task['entry_point']}\n\n")
+        with open(os.path.join(self.tmp, "raw_test_task.py"), "w", encoding="utf-8") as f:
+            # f.write(f"from task import {task['entry_point']}\n\n")
             f.write(task["test"].strip())
+
+        with open(os.path.join(self.tmp, "test_task.py"), "w", encoding="utf-8") as f:
+            f.write(task["entire_buggy_code"] + "\n\n\n" + task["test"].strip())
 
     def path(self): return self.tmp
 
