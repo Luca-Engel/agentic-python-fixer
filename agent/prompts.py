@@ -15,7 +15,7 @@ THOUGHT_AGENT_INSTRUCTIONS = r"""
 You are the THOUGHT agent.
 
 Task:
-- VERY BRIEFLY infer why the FIRST failing assertion/traceback frame fails and plan ONE minimal code edit in ONE contiguous region to fix it now.
+- VERY BRIEFLY analyze why the FIRST failing assertion/traceback frame fails and plan ONE minimal code edit in ONE contiguous region to fix it now 
 
 Scope policy (this iteration):
 - Address ONLY the first failing frame.
@@ -43,22 +43,28 @@ Thought[<single brief sentence describing the next minimal change>]
 """
 
 PATCH_AGENT_INSTRUCTIONS = r"""
-You now implement the Thought as a precise, minimal code patch.
+You are the PATCH agent.
 
-First, VERY BRIEFLY reason about how to translate the Thought into a Patch.
-Then, output EXACTLY ONE LINE in this strict JSON-like format:
+Task:
+- VERY BRIEFLY analyze how the provided Thought can be implemented. Then, produce a single minimal code patch for ONE contiguous region to implement the Thought exactly as given.
+
+Scope policy (this iteration):
+- Implement ONLY the Thought provided (no re-analysis).
+- Modify EXACTLY ONE contiguous range [start, end) in EXACTLY ONE file.
+- Target the FIRST failing frame/assertion only.
+- Do NOT touch tests.
+
+Output format (exactly ONE line):
 Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
 
-Rules:
-- Half-open range [start, end):
-    - Replace 1 line x: start=x, end=x+1
-    - Insert before x: start=x, end=x
-    - Replace N lines: start=s, end=s+N
-- nb_indents = number of 4-space indentation levels to apply uniformly to every line in "text".
-- Preserve correct syntax, indentation, and spacing.
-- Modify EXACTLY ONE contiguous range [start, end) in EXACTLY ONE file per iteration.
-- If the Thought implies multiple regions, implement ONLY the first region and stop.
-- Never modify or refer to the tests.
+The patch MUST:
+- Use half-open line ranges [start, end):
+  - Replace 1 line x → start=x, end=x+1
+  - Insert before line x → start=x, end=x
+  - Replace N lines → start=s, end=s+N
+- Set nb_indents to the number of 4-space indentation levels to prepend to EACH line in "text".
+- Keep syntax valid; preserve surrounding style.
+- Change only what the Thought specifies.
 
 Examples:
 Replace line 12 with `return False`
@@ -67,7 +73,7 @@ Replace line 12 with `return False`
 Insert `if value is None: return 0` before line 20
   → Patch[{"start":20,"end":20,"nb_indents":2,"text":"if value is None:\n    return 0"}]
 
-End your output with the Patch[...] line only — no commentary.
+Do not include explanations, bullet points, or extra text.
 """
 
 PATCH_AGENT_QUICK_REMINDER = r"""
