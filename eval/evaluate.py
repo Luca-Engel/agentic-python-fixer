@@ -28,9 +28,9 @@ def _instantiate_model_locally(model_cfg: ModelConfig):
         messages = [{"role": "user", "content": prompt}]
         text = tok.apply_chat_template(
             messages,
-            tokenize=model_cfg.tokenize,
-            add_generation_prompt=model_cfg.add_generation_prompt,
-            enable_thinking=model_cfg.enable_thinking,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
         )
 
         # Tokenize and move tensors to model device
@@ -38,11 +38,12 @@ def _instantiate_model_locally(model_cfg: ModelConfig):
 
         gen = model.generate(
             **inputs,
-            max_new_tokens=model_cfg.max_new_tokens,
-            do_sample=model_cfg.do_sample,
-            temperature=model_cfg.temperature,
-            top_p=model_cfg.top_p,
-            top_k=model_cfg.top_k,
+            max_new_tokens=30000,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.8,
+            top_k=20,
+            # min_p=0.0,
         )
 
         # Extract only the generated portion and decode
@@ -73,13 +74,14 @@ def _instantiate_model_openai():
     return _call
 
 
-def _instantiate_model_hf_api():
+def _instantiate_model_hf_api(frequency_penalty=0.2, presence_penalty=0.0):
     load_dotenv()  # loads .env into environment
     api_key = os.getenv("HF_TOKEN")
     env_model = os.getenv("HF_MODEL")
+    base_url = os.getenv("HF_MODEL_API_URL")
 
     _client = OpenAI(
-        base_url="https://h9yo77jwpffhw2sb.us-east4.gcp.endpoints.huggingface.cloud/v1/",
+        base_url=base_url,
         api_key=api_key
     )
 
@@ -91,12 +93,17 @@ def _instantiate_model_hf_api():
             messages=[{"role": "user", "content": prompt}],
             # stream=True,
             # Thinking mode
-            temperature=0.6,
-            top_p=0.95,
+            # temperature=0.6,
+            # top_p=0.95,
+            # presence_penalty=presence_penalty,
+            # frequency_penalty=frequency_penalty,
+            # max_tokens=30000,
+            # seed=42
+
+
+
             # top_k=20,
             # min_p=0,
-            max_tokens=10000,
-            seed=42
             # Non-thinking mode
             # temperature=0.7,
             # top_p=0.8,
@@ -117,17 +124,27 @@ def _instantiate_model_hf_api():
 def make_llm(model_cfg: ModelConfig):
     """
     Create a language model callable from the given configuration.
+    Returns a tuple (llm_thought, llm_patch)
     """
-    # return _instantiate_model_locally(model_cfg)
-    # return _instantiate_model_openai()
-    return _instantiate_model_hf_api()
+    if model_cfg.run_type == "local":
+        print("Using local model.")
+        return _instantiate_model_locally(model_cfg), _instantiate_model_locally(model_cfg)
+    elif model_cfg.run_type == "openai":
+        print("Using OpenAI model.")
+        return _instantiate_model_openai(), _instantiate_model_openai()
+    elif model_cfg.run_type == "hf_api":
+        print("Using HuggingFace API model.")
+        return _instantiate_model_hf_api(frequency_penalty=0.0, presence_penalty=0.0), _instantiate_model_hf_api(0.0, 0.0)
+    else:
+        raise ValueError(f"Unknown model run_type: {model_cfg.run_type}, must be one of 'local', 'openai', 'hf_api'.")
 
 
 def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: RuntimeConfig):
     ws = TaskWorkspace(task)
     try:
         tools = Toolset(workdir=ws.path())
-        loop = ReActLoop(llm_thought=make_llm(model_cfg), llm_patch=make_llm(model_cfg), tools=tools,
+        llm_thought, llm_patch = make_llm(model_cfg)
+        loop = ReActLoop(llm_thought=llm_thought, llm_patch=llm_patch, tools=tools,
                          max_iters=rt_cfg.max_iters)
         res = loop.run()
 

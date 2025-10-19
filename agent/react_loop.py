@@ -50,13 +50,12 @@ class ReActLoop:
                 current_trajectory=self.trajectory,
             )
             print("1. Thought Being prompted")
+            # print(f"prompt:\n{thought_prompt}\n---END OF THOUGHT PROMPT---")
             thought_out = self.llm_thought(thought_prompt)
             print("2. Thought Completion:\n", thought_out)
 
             try:
-                print("2.1 parsing thought")
                 kind, payload, matched = parse_thought(thought_out)
-                print("2.2 thought parsed")
             except Exception as e:
                 print(" -> error parsing Thought/Finish output:", e)
                 self.trajectory.append(
@@ -81,6 +80,7 @@ class ReActLoop:
                 current_trajectory=self.trajectory,
             )
             print("3. Patch Being Prompted")
+            # print(f"prompt:\n{patch_prompt}\n---END OF PATCH PROMPT---")
             patch_out = self.llm_patch(patch_prompt)
             print("4. Patch Completion:\n", patch_out)
 

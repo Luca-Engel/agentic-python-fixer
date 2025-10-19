@@ -12,11 +12,20 @@ app = typer.Typer()
 
 
 @app.command()
-def main(model: str = "Qwen/Qwen3-0.6B",
+def main(run_type: str = "local",
          subset: str = "all",
          max_iters: int = 10,
          timeout_secs: int = 10,
          report: str = "reports/hef_py_report.json"):
+    if run_type not in ["local", "openai", "hf_api"]:
+        raise ValueError(f"Unknown model: {run_type}, must be one of 'local', 'openai', 'hf_api'.")
+    run_type_to_name = {
+        "local": "Qwen/Qwen3-0.6B",
+        "openai": "gpt-4o mini",
+        "hf_api": "Qwen/Qwen3-1.7B"
+    }
+    model_name = run_type_to_name[run_type]
+
     tasks = load_tasks()
     if subset.startswith("stratified"):
         fraction = float(subset.split("0")[1]) if "-" in subset else 0.2
@@ -25,7 +34,7 @@ def main(model: str = "Qwen/Qwen3-0.6B",
         # tasks = tasks.select(range(10))
         tasks = stratified_sample(tasks, percent=fraction, min_per_class=5, seed=42)
 
-    mcfg = ModelConfig(model_name=model)
+    mcfg = ModelConfig(model_name=model_name, run_type=run_type)
     rcfg = RuntimeConfig(max_iters=max_iters, test_timeout_s=timeout_secs)
     results = []
 

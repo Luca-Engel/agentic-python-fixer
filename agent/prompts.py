@@ -85,6 +85,9 @@ Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
 def _format_code_and_tests(python_code: str, python_tests: str, tests_run_result: str) -> str:
     python_code_lines = python_code.splitlines()
     numbered_code = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(python_code_lines))
+    print("=== Formatted Prompt Code with Line Numbers ===")
+    print(numbered_code)
+    print("=== End of Formatted Code ===")
     return (
         "\n\n=== CURRENT CODE (with line numbers) ===\n"
         f"```python\n{numbered_code}\n```"
@@ -104,7 +107,7 @@ def build_thought_prompt(
     traj = "\n".join(current_trajectory[-6:]) if current_trajectory else "No previous iterations."
     return (
             SYSTEM_PROMPT
-            + "\n\nYou are the THOUGHT agent."
+            + "\n"
             + THOUGHT_AGENT_INSTRUCTIONS
             + "\n\nPrevious steps (last few):\n" + traj
             + "\n\nImportant: You are continuing an iterative repair loop."
@@ -126,9 +129,9 @@ def build_patch_prompt(
     traj = "\n".join(current_trajectory) if current_trajectory else "No previous iterations."
     return (
             SYSTEM_PROMPT
-            + "\n\nYou are the PATCH agent. Apply a single minimal patch that implements the Thought below."
+            + "\n"
             + PATCH_AGENT_INSTRUCTIONS
-            + "\n\nThought to implement (verbatim):\n" + thought_line + "\n"
+            + "\n\nThought to implement (verbatim):\n" + thought_line + "\n\n"
             + "Previous steps (last few):\n" + traj
             + "\n\nImportant: You are in an iterative bug-fixing loop."
               " Apply the given Thought exactly as written."

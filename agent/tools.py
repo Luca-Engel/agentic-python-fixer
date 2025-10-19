@@ -29,9 +29,7 @@ class Toolset:
         print("3.1 Before patch:")
         print(src)
         # text_with_indents = "    " * nb_indents + text.strip() + "\n"
-        lines = text.strip().splitlines()
-        indent = "    " * nb_indents
-        text_with_indents = "\n".join(indent + line for line in lines) + "\n"
+        text_with_indents = self.get_text_with_indents(nb_indents, text)
 
         sp = SpanPatch(path=p, start=start, end=end, text=text_with_indents)
         dst = apply_span_patch(src, sp)
@@ -52,6 +50,22 @@ class Toolset:
             f.write(dst + "\n\n\n" + test_content)
 
         return ToolResult(True, "Wrote patch.")
+
+    def get_text_with_indents(self, nb_indents: int, text: str) -> str:
+        lines = text.splitlines()
+        first_line = lines[0]
+
+        leading = len(first_line) - len(first_line.lstrip()) if first_line else 0
+        processed_lines = []
+        for line in lines:
+            if leading > 0 and line.startswith(' ' * leading):
+                processed_lines.append(line[leading:])
+            else:
+                processed_lines.append(line)
+
+        indent = "    " * nb_indents
+        text_with_indents = "\n".join(indent + line for line in processed_lines) + "\n"
+        return text_with_indents
 
     def run_pytests(self, timeout_s: int = 10, mem_mb: int = 2048):
         code, out = run_pytests_docker(
