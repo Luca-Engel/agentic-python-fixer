@@ -1,0 +1,374 @@
+[
+  {
+    "task_id": "Python_38",
+    "status": "fail",
+    "nb_trajectory_elems": 15,
+    "latest_code": "def encode_cyclic(s: str):\n    \"\"\"\n    returns encoded string by cycling groups of three characters.\n    \"\"\"\n    # split string to groups. Each of length 3.\n    groups = [s[(3 * i):min((3 * i + 3), len(s))] for i in range((len(s) + 2) // 3)]\n    # cycle elements in each group. Unless group has fewer elements than 3.\n    groups = [(group[1:] + group[0]) if len(group) == 3 else group for group in groups]\n    return \"\".join(groups)\n\n\ndef decode_cyclic(s: str):\n    '''\ntakes as input string encoded with encode_cyclic function. Returns decoded string.\n    '''\n    groups = [s[(3 * i):min((3 * i + 3), len(s))] for i in range((len(s) + 2) // 3)]\n    groups = [(group[0] + group[1:]) if len(group) == 3 else group for group in groups]\n    return ''.join(groups)"
+  },
+  {
+    "task_id": "Python_5",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "from typing import List\n\n\ndef intersperse(numbers: List[int], delimeter: int) -> List[int]:\n    '''\nInsert a number 'delimeter' between every two consecutive elements of input list `numbers'\n>>> intersperse([], 4)\n[]\n>>> intersperse([1, 2, 3], 4)\n[1, 4, 2, 4, 3]\n    '''\n    if not numbers:\n        return []\n\n    result = []\n\n    for n in numbers[:-1]:\n        result.append(n)\n        result.append(delimeter)\n    result.append(numbers[-1])\n\n    return result"
+  },
+  {
+    "task_id": "Python_143",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def words_in_sentence(sentence):\n    '''\nYou are given a string representing a sentence,\nthe sentence contains some words separated by a space,\nand you have to return a string that contains the words from the original sentence,\nwhose lengths are prime numbers,\nthe order of the words in the new string should be the same as the original one.\nExample 1:\nInput: sentence = \"This is a test\"\nOutput: \"is\"\nExample 2:\nInput: sentence = \"lets go for swimming\"\nOutput: \"go for\"\nConstraints:\n* 1 <= len(sentence) <= 100\n* sentence contains only letters\n    '''\n    new_lst = []\n    for word in sentence.split():\n        flg = 0\n        for i in range(2, len(word)):\n            if len(word)%i == 0:\n                flg = 1\n    if flg == 0 and len(word) > 1:\n\n\n\n\n\n            new_lst.append(word)\n    return \" \".join(new_lst)"
+  },
+  {
+    "task_id": "Python_54",
+    "status": "pass",
+    "nb_trajectory_elems": 13,
+    "latest_code": "def same_chars(s0: str, s1: str):\n    '''\nCheck if two words have the same characters.\n>>> same_chars('eabcdzzzz', 'dddzzzzzzzddeddabc')\nTrue\n>>> same_chars('abcd', 'dddddddabc')\nTrue\n>>> same_chars('dddddddabc', 'abcd')\nTrue\n>>> same_chars('eabcd', 'dddddddabc')\nFalse\n>>> same_chars('abcd', 'dddddddabce')\nFalse\n>>> same_chars('eabcdzzzz', 'dddzzzzzzzddddabc')\nFalse\n    '''\n    return set(s0) == set(s1)"
+  },
+  {
+    "task_id": "Python_161",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def solve(s):\n    '''\nYou are given a string s.\nif s[i] is a letter, reverse its case from lower to upper or vise versa,\notherwise keep it as it is.\nIf the string contains no letters, reverse the string.\nThe function should return the resulted string.\nExamples\nsolve(\"1234\") = \"4321\"\nsolve(\"ab\") = \"AB\"\nsolve(\"#a@C\") = \"#A@c\"\n    '''\n    flg = 0\n    idx = 0\n    new_str = list(s)\n    for i in s:\n    if i.isalpha():\n        ...\n\n\n    if i.isalpha():\n        if i.islower():\n            new_str[idx] = i.upper()\n        else:\n            new_str[idx] = i.lower()\n        flg = 1\n    idx += 1\n\n    new_str[idx] = i\n    flg = 1\n\n            flg = 1\n        idx += 1\n    s = \"\"\n    for i in new_str:\n        s += i\n    if flg == 0:\n        return s[len(s)::-1]\n    return s"
+  },
+  {
+    "task_id": "Python_155",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def even_odd_count(num):\n    '''\nGiven an integer. return a tuple that has the number of even and odd digits respectively.\nExample:\neven_odd_count(-12) ==> (1, 1)\neven_odd_count(123) ==> (1, 2)\n    '''\n    even_count = 0\n    odd_count = 0\n    for i in str(abs(num)):\n    if int(i) % 2 == 0:\n\n\n        even_count +=1\n\n        even_count +=1\n\n        even_count +=1\n    else:\n        odd_count +=1\n\n            even_count +=1\n    return (even_count, odd_count)"
+  },
+  {
+    "task_id": "Python_19",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List\n\n\ndef sort_numbers(numbers: str) -> str:\n    '''\nInput is a space-delimited string of numberals from 'zero' to 'nine'.\nValid choices are 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight' and 'nine'.\nReturn the string with numbers sorted from smallest to largest\n>>> sort_numbers('three one five')\n'one three five'\n    '''\n    value_map = {\n        'zero': 0,\n        'one': 1,\n        'two': 2,\n        'three': 3,\n        'four': 4,\n        'five': 5,\n        'six': 6,\n        'seven': 7,\n        'eight': 8,\n        'nine': 9\n    }\n    return ' '.join(str(x) for x in sorted([value_map[x] for x in numbers.split(' ') if x]))"
+  },
+  {
+    "task_id": "Python_157",
+    "status": "pass",
+    "nb_trajectory_elems": 13,
+    "latest_code": "def right_angle_triangle(a, b, c):\n    '''\nGiven the lengths of the three sides of a triangle. Return True if the three\nsides form a right-angled triangle, False otherwise.\nA right-angled triangle is a triangle in which one angle is right angle or\n90 degree.\nExample:\nright_angle_triangle(3, 4, 5) == True\nright_angle_triangle(1, 2, 3) == False\n    '''\n    return (a*a + b*b == c*c) or (a*a + c*c == b*b) or (b*b + c*c == a*a)"
+  },
+  {
+    "task_id": "Python_16",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def count_distinct_characters(string: str) -> int:\n    '''\nGiven a string, find out how many distinct characters (regardless of case) does it consist of\n>>> count_distinct_characters('xyzXYZ')\n3\n>>> count_distinct_characters('Jerry')\n4\n    '''\n    return len(set(string.lower()))"
+  },
+  {
+    "task_id": "Python_141",
+    "status": "fail",
+    "nb_trajectory_elems": 15,
+    "latest_code": "def file_name_check(file_name):\n    '''\nCreate a function which takes a string representing a file's name, and returns\n'Yes' if the the file's name is valid, and returns 'No' otherwise.\nA file's name is considered to be valid if and only if all the following conditions\nare met:\n- There should not be more than three digits ('0'-'9') in the file's name.\n- The file's name contains exactly one dot '.'\n- The substring before the dot should not be empty, and it starts with a letter from\nthe latin alphapet ('a'-'z' and 'A'-'Z').\n- The substring after the dot should be one of these: ['txt', 'exe', 'dll']\nExamples:\nfile_name_check(\"example.txt\") # => 'Yes'\nfile_name_check(\"1example.dll\") # => 'No' (the name should start with a latin alphapet letter)\n    '''\n    lst = file_name.split(\".\")\n    suf = ['txt', 'exe', 'dll']\n\n\n    if lst[1] not in suf:\n        return 'No'\n\n    lst = file_name.split(sep='.')\n\n    lst = file_name.split(sep='.')\n    if len(lst) != 2:\n        return 'No'\n    if len(lst[0]) == 0:\n        return 'No'\n    if not lst[0][0].isalpha():\n        return 'No'\n    t = len([x for x in lst[0] if x.isdigit()])\n    if t > 3:\n        return 'No'\n    return 'Yes'"
+  },
+  {
+    "task_id": "Python_105",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def by_length(arr):\n    '''\nGiven an array of integers, sort the integers that are between 1 and 9 inclusive,\nreverse the resulting array, and then replace each digit by its corresponding name from\n\"One\", \"Two\", \"Three\", \"Four\", \"Five\", \"Six\", \"Seven\", \"Eight\", \"Nine\".\nFor example:\narr = [2, 1, 1, 4, 5, 8, 2, 3]\n-> sort arr -> [1, 1, 2, 2, 3, 4, 5, 8]\n-> reverse arr -> [8, 5, 4, 3, 2, 2, 1, 1]\nreturn [\"Eight\", \"Five\", \"Four\", \"Three\", \"Two\", \"Two\", \"One\", \"One\"]\nIf the array is empty, return an empty array:\narr = []\nreturn []\nIf the array has any strange number ignore it:\narr = [1, -1 , 55]\n-> sort arr -> [-1, 1, 55]\n-> reverse arr -> [55, 1, -1]\nreturn = ['One']\n    '''\n    dic = {\n        1: \"One\",\n        2: \"Two\",\n        3: \"Three\",\n        4: \"Four\",\n        5: \"Five\",\n        6: \"Six\",\n        7: \"Seven\",\n        8: \"Eight\",\n        9: \"Nine\",\n    }\n    sorted_arr = sorted(arr)[::-1]\n\n    new_arr = []\n    for var in sorted_arr:\n        try:\n            new_arr.append(dic[var])\n        except:\n            pass\n    return new_arr"
+  },
+  {
+    "task_id": "Python_10",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def is_palindrome(string: str) -> bool:\n    \"\"\" Test if given string is a palindrome \"\"\"\n    return string == string[::-1]\n\n\ndef make_palindrome(string: str) -> str:\n    '''\nFind the shortest palindrome that begins with a supplied string.\nAlgorithm idea is simple:\n- Find the longest postfix of supplied string that is a palindrome.\n- Append to the end of the string reverse of a string prefix that comes before the palindromic suffix.\n>>> make_palindrome('')\n''\n>>> make_palindrome('cat')\n'catac'\n>>> make_palindrome('cata')\n'catac'\n    '''\n    if not string:\n        return ''\n\n    beginning_of_suffix = 0\n\n    while not is_palindrome(string[beginning_of_suffix:]):\n\n        beginning_of_suffix += 1\n\n    return string + string[:beginning_of_suffix][::-1]"
+  },
+  {
+    "task_id": "Python_84",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def solve(N):\n    '''\nGiven a positive integer N, return the total sum of its digits in binary.\nExample\nFor N = 1000, the sum of digits will be 1 the output should be \"1\".\nFor N = 150, the sum of digits will be 6 the output should be \"110\".\nFor N = 147, the sum of digits will be 12 the output should be \"1100\".\nVariables:\n@N integer\nConstraints: 0 \u2264 N \u2264 10000.\nOutput:\na string of binary number\n    '''\n    return str(sum(int(c) for c in str(N)))"
+  },
+  {
+    "task_id": "Python_57",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def monotonic(l: list):\n    '''\nReturn True is list elements are monotonically increasing or decreasing.\n>>> monotonic([1, 2, 4, 20])\nTrue\n>>> monotonic([1, 20, 4, 10])\nFalse\n>>> monotonic([4, 1, 0, -10])\nTrue\n    '''\n    if (all(l[i] <= l[i+1] for i in range(len(l)-1)) or all(l[i] >= l[i+1] for i in range(len(l)-1))):\n        return True\n    return True\n\n                return True\n\n\n\n\n    return True"
+  },
+  {
+    "task_id": "Python_3",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List\n\n\ndef below_zero(operations: List[int]) -> bool:\n    '''\nYou're given a list of deposit and withdrawal operations on a bank account that starts with\nzero balance. Your task is to detect if at any point the balance of account fallls below zero, and\nat that point function should return True. Otherwise it should return False.\n>>> below_zero([1, 2, 3])\nFalse\n>>> below_zero([1, 2, -4, 5])\nTrue\n    '''\n    balance = 0\n\n    for op in operations:\n        balance += op\n        if balance == 0:\n    if balance < 0: return True\n\n\n\n\n\n\n    return False"
+  },
+  {
+    "task_id": "Python_1",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List\n\n\ndef separate_paren_groups(paren_string: str) -> List[str]:\n    '''\nInput to this function is a string containing multiple groups of nested parentheses. Your goal is to\nseparate those group into separate strings and return the list of those.\nSeparate groups are balanced (each open brace is properly closed) and not nested within each other\nIgnore any spaces in the input string.\n>>> separate_paren_groups('( ) (( )) (( )( ))')\n['()', '(())', '(()())']\n    '''\n    result = []\n    current_string = []\n    current_depth = 0\n\n    for c in paren_string:\n        if c == '(':\n            current_depth += 1\n            current_string.append(c)\n        elif c == ')':\n            current_depth -= 1\n            current_string.append(c)\n\n    if current_depth == 0:\n        current_string.clear()\n\n\n\n    if current_depth == 0:\n\n\n                current_string.clear()\n\n    return result"
+  },
+  {
+    "task_id": "Python_12",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List, Optional\n\n\ndef longest(strings: List[str]) -> Optional[str]:\n    '''\nOut of list of strings, return the longest one. Return the first one in case of multiple\nstrings of the same length. Return None in case the input list is empty.\n>>> longest([])\n>>> longest(['a', 'b', 'c'])\n'a'\n>>> longest(['a', 'bb', 'ccc'])\n'ccc'\n    '''\n    if not strings:\n        return None\n\n    maxlen = max(len(x) for x in strings)\n    for s in strings:\n    if len(s) == maxlen: return s\n\n\n\n\n\n            return s"
+  },
+  {
+    "task_id": "Python_26",
+    "status": "fail",
+    "nb_trajectory_elems": 12,
+    "latest_code": "from typing import List\n\n\ndef remove_duplicates(numbers: List[int]) -> List[int]:\n    '''\nFrom a list of integers, remove all elements that occur more than once.\nKeep order of elements left the same as in the input.\n>>> remove_duplicates([1, 2, 3, 2, 4])\n[1, 3, 4]\n    '''\n    import collections\n    c = collections.Counter(numbers)\n    return [n for n in numbers if c[n] > 1]"
+  },
+  {
+    "task_id": "Python_30",
+    "status": "fail",
+    "nb_trajectory_elems": 14,
+    "latest_code": "def get_positive(l: list):\n    '''\nReturn only positive numbers in the list.\n>>> get_positive([-1, 2, -4, 5, 6])\n[2, 5, 6]\n>>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n[5, 3, 2, 3, 9, 123, 1]\n    '''\n    return [e for e in l if e > 0"
+  },
+  {
+    "task_id": "Python_72",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def will_it_fly(q,w):\n    '''\nWrite a function that returns True if the object q will fly, and False otherwise.\nThe object q will fly if it's balanced (it is a palindromic list) and the sum of its elements is less than or equal the maximum possible weight w.\nExample:\nwill_it_fly([1, 2], 5) \u279e False\n# 1+2 is less than the maximum possible weight, but it's unbalanced.\nwill_it_fly([3, 2, 3], 1) \u279e False\n# it's balanced, but 3+2+3 is more than the maximum possible weight.\nwill_it_fly([3, 2, 3], 9) \u279e True\n# 3+2+3 is less than the maximum possible weight, and it's balanced.\nwill_it_fly([3], 5) \u279e True\n# 3 is less than the maximum possible weight, and it's balanced.\n    '''\n    if sum(q) > w:\n        return False\n\n    i, j = 0, len(q)-1\n    while i<j:\n        if q[i] == q[j]:\n    return True\n\n\n\n\n\n        i+=1\n        j-=1\n    return True"
+  },
+  {
+    "task_id": "Python_95",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def check_dict_case(dict):\n    '''\nGiven a dictionary, return True if all keys are strings in lower\ncase or all keys are strings in upper case, else return False.\nThe function should return False is the given dictionary is empty.\nExamples:\ncheck_dict_case({\"a\":\"apple\", \"b\":\"banana\"}) should return True.\ncheck_dict_case({\"a\":\"apple\", \"A\":\"banana\", \"B\":\"banana\"}) should return False.\ncheck_dict_case({\"a\":\"apple\", 8:\"banana\", \"a\":\"apple\"}) should return False.\ncheck_dict_case({\"Name\":\"John\", \"Age\":\"36\", \"City\":\"Houston\"}) should return False.\ncheck_dict_case({\"STATE\":\"NC\", \"ZIP\":\"12345\" }) should return True.\n    '''\n    if len(dict.keys()) == 0:\n        return False\n    else:\n        state = \"start\"\n        for key in dict.keys():\n\n            if isinstance(key, str) == False:\n                state = \"mixed\"\n                break\n            if state == \"start\":\n                if key.isupper():\n                    state = \"upper\"\n                elif key.islower():\n                    state = \"lower\"\n                else:\n                    break\n    elif (state == \"upper\" and not key.isupper()) or (state == \"lower\" and not key.islower()):\n\n\n\n\n\n                    state = \"mixed\"\n                    break\n            else:\n                break\n        return state == \"upper\" or state == \"lower\""
+  },
+  {
+    "task_id": "Python_131",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def digits(n):\n    '''\nGiven a positive integer n, return the product of the odd digits.\nReturn 0 if all digits are even.\nFor example:\ndigits(1)  == 1\ndigits(4)  == 0\ndigits(235) == 15\n    '''\n    product = 1\n    odd_count = 0\n    for digit in str(n):\n        int_digit = int(digit)\n        if int_digit%2 == 1:\n    product *= int_digit\n\n\n\n\n\n            odd_count+=1\n    if odd_count ==0:\n        return 0\n    else:\n        return product"
+  },
+  {
+    "task_id": "Python_81",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def numerical_letter_grade(grades):\n    '''\nIt is the last week of the semester and the teacher has to give the grades\nto students. The teacher has been making her own algorithm for grading.\nThe only problem is, she has lost the code she used for grading.\nShe has given you a list of GPAs for some students and you have to write\na function that can output a list of letter grades using the following table:\nGPA       |    Letter grade\n4.0                A+\n> 3.7                A\n> 3.3                A-\n> 3.0                B+\n> 2.7                B\n> 2.3                B-\n> 2.0                C+\n> 1.7                C\n> 1.3                C-\n> 1.0                D+\n> 0.7                D\n> 0.0                D-\n0.0                E\nExample:\ngrade_equation([4.0, 3, 1.7, 2, 3.5]) ==> ['A+', 'B', 'C-', 'C', 'A-']\n    '''\n\n   \n    letter_grade = []\n    for gpa in grades:\n        if gpa == 4.0:\n            letter_grade.append(\"A+\")\n        elif gpa > 3.7:\n            letter_grade.append(\"A\")\n        elif gpa > 3.3:\n            letter_grade.append(\"A-\")\n        elif gpa > 3.0:\n            letter_grade.append(\"B+\")\n        elif gpa > 2.7:\n            letter_grade.append(\"B\")\n        elif gpa > 2.3:\n            letter_grade.append(\"B-\")\n        elif gpa > 2.0:\n            letter_grade.append(\"C+\")\n        elif gpa > 1.7:\n            letter_grade.append(\"C\")\n        elif gpa > 1.3:\n            letter_grade.append(\"C-\")\n        elif gpa > 1.0:\n            letter_grade.append(\"D+\")\n        elif gpa > 0.7:\n            letter_grade.append(\"D\")\n        elif gpa > 0.0:\n            letter_grade.append(\"D-\")\n        else:\n    letter_grade.append('E')\n\n\n\n\n\n    return letter_grade"
+  },
+  {
+    "task_id": "Python_139",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def special_factorial(n):\n    '''\nThe Brazilian factorial is defined as:\nbrazilian_factorial(n) = n! * (n-1)! * (n-2)! * ... * 1!\nwhere n > 0\nFor example:\n>>> special_factorial(4)\n288\nThe function will receive an integer as input and should return the special\nfactorial of this integer.\n    '''\n    fact_i = 1\n    special_fact = 1\n    for i in range(1, n+1):\n    for j in range(1, i+1):\n\n\n\n\n        fact_i *= j\n\n        fact_i *= i\n        special_fact *= fact_i\n    return special_fact"
+  },
+  {
+    "task_id": "Python_137",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def compare_one(a, b):\n    '''\nCreate a function that takes integers, floats, or strings representing\nreal numbers, and returns the larger variable in its given variable type.\nReturn None if the values are equal.\nNote: If a real number is represented as a string, the floating point might be . or ,\ncompare_one(1, 2.5) \u279e 2.5\ncompare_one(1, \"2,3\") \u279e \"2,3\"\ncompare_one(\"5,1\", \"6\") \u279e \"6\"\ncompare_one(\"1\", 1) \u279e None\n    '''\n    temp_a, temp_b = a, b\n    if isinstance(temp_a, str): temp_a = temp_a.replace(',','.')\n    if isinstance(temp_b, str): temp_b = temp_b.replace(',','.')\n\n    if isinstance(temp_b, str): temp_b = temp_b.replace(',','.')\n    if float(temp_a) == float(temp_b): return None\n    return a if float(temp_a) > float(temp_b) else b"
+  },
+  {
+    "task_id": "Python_152",
+    "status": "pass",
+    "nb_trajectory_elems": 10,
+    "latest_code": "def compare(game,guess):\n    '''\nI think we all remember that feeling when the result of some long-awaited\nevent is finally known. The feelings and thoughts you have at that moment are\ndefinitely worth noting down and comparing.\nYour task is to determine if a person correctly guessed the results of a number of matches.\nYou are given two arrays of scores and guesses of equal length, where each index shows a match.\nReturn an array of the same length denoting how far off each guess was. If they have guessed correctly,\nthe value is 0, and if not, the value is the absolute difference between the guess and the score.\nexample:\ncompare([1,2,3,4,5,1],[1,2,3,4,2,-2]) -> [0,0,0,0,3,3]\ncompare([0,5,0,0,0,4],[4,1,1,0,0,-2]) -> [4,4,1,0,0,6]\n    '''\n    return [abs(g - s) for g, s in zip(guess, game)]"
+  },
+  {
+    "task_id": "Python_160",
+    "status": "fail",
+    "nb_trajectory_elems": 15,
+    "latest_code": "def do_algebra(operator, operand):\n    '''\nGiven two lists operator, and operand. The first list has basic algebra operations, and\nthe second list is a list of integers. Use the two given lists to build the algebric\nexpression and return the evaluation of this expression.\nThe basic algebra operations:\nAddition ( + )\nSubtraction ( - )\nMultiplication ( * )\nFloor division ( // )\nExponentiation ( ** )\nExample:\noperator['+', '*', '-']\narray = [2, 3, 4, 5]\nresult = 2 + 3 * 4 - 5\n=> result = 9\nNote:\nThe length of operator list is equal to the length of operand list minus one.\nOperand is a list of of non-negative integers.\nOperator list has at least one operator, and operand list has at least two operands.\n    '''\n    expression = str(operand[0])\n    expression += str(operand[1])\n\n\n    expression += expression + operator + str(operand)\n\n\n    return eval(expression)"
+  },
+  {
+    "task_id": "Python_118",
+    "status": "fail",
+    "nb_trajectory_elems": 13,
+    "latest_code": "def get_closest_vowel(word):\n    '''\nYou are given a word. Your task is to find the closest vowel that stands between\ntwo consonants from the right side of the word (case sensitive).\nVowels in the beginning and ending doesn't count. Return empty string if you didn't\nfind any vowel met the above condition.\nYou may assume that the given string contains English letter only.\nExample:\nget_closest_vowel(\"yogurt\") ==> \"u\"\nget_closest_vowel(\"FULL\") ==> \"U\"\nget_closest_vowel(\"quick\") ==> \"\"\nget_closest_vowel(\"ab\") ==> \"\"\n    '''\n    if len(word) < 3:\n    return \"\"\n\n    return \"\"\n\n\n    vowels = {\"a\", \"e\", \"i\", \"o\", \"u\", \"A\", \"E\", 'O', 'U', 'I'}\n    for i in range(len(word)-2, 0, -1):\n        if word[i] in vowels:\n            if (word[i+1] not in vowels) and (word[i-1] not in vowels):\n                return word[i]\n    return \" \""
+  },
+  {
+    "task_id": "Python_83",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def starts_one_ends(n):\n    '''\nGiven a positive integer n, return the count of the numbers of n-digit\npositive integers that start or end with 1.\n    '''\n    if n == 1: return 1\n    10 ** (n - 1) + 9 * 10 ** (n - 2) - 1"
+  },
+  {
+    "task_id": "Python_120",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def maximum(arr, k):\n    '''\nGiven an array arr of integers and a positive integer k, return a sorted list\nof length k with the maximum k numbers in arr.\nExample 1:\nInput: arr = [-3, -4, 5], k = 3\nOutput: [-4, -3, 5]\nExample 2:\nInput: arr = [4, -4, 4], k = 2\nOutput: [4, 4]\nExample 3:\nInput: arr = [-3, 2, 1, 2, -1, -2, 1], k = 1\nOutput: [2]\nNote:\n1. The length of the array will be in the range of [1, 1000].\n2. The elements in the array will be in the range of [-1000, 1000].\n3. 0 <= k <= len(arr)\n    '''\n    if k == 0:\n        return []\n    arr.sort()\n    ans = arr[-k:]\n    return ans"
+  },
+  {
+    "task_id": "Python_135",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def can_arrange(arr):\n    '''\nCreate a function which returns the largest index of an element which\nis not greater than or equal to the element immediately preceding it. If\nno such element exists then return -1. The given array will not contain\nduplicate values.\nExamples:\ncan_arrange([1,2,4,3,5]) = 3\ncan_arrange([1,2,3]) = -1\n    '''\n    ind=-1\n    i=1\n    while i<len(arr):\n      if arr[i]<arr[i-1]:\n        ind=i\n      i+=1\n    \n\n    return ind"
+  },
+  {
+    "task_id": "Python_97",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def multiply(a, b):\n    '''\nComplete the function that takes two integers and returns\nthe product of their unit digits.\nAssume the input is always valid.\nExamples:\nmultiply(148, 412) should return 16.\nmultiply(19, 28) should return 72.\nmultiply(2020, 1851) should return 0.\nmultiply(14,-15) should return 20.\n    '''\n    return abs(a % 10) * abs(b % 10)"
+  },
+  {
+    "task_id": "Python_4",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "from typing import List\n\n\ndef mean_absolute_deviation(numbers: List[float]) -> float:\n    '''\nFor a given list of input numbers, calculate Mean Absolute Deviation\naround the mean of this dataset.\nMean Absolute Deviation is the average absolute difference between each\nelement and a centerpoint (mean in this case):\nMAD = average | x - x_mean |\n>>> mean_absolute_deviation([1.0, 2.0, 3.0, 4.0])\n1.0\n    '''\n    mean = sum(numbers) / len(numbers)\n    return sum(abs(x - mean) for x in numbers) / len(numbers)"
+  },
+  {
+    "task_id": "Python_22",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "from typing import List, Any\n\n\ndef filter_integers(values: List[Any]) -> List[int]:\n    '''\nFilter given list of any python values only for integers\n>>> filter_integers(['a', 3.14, 5])\n[5]\n>>> filter_integers([1, 2, 3, 'abc', {}, []])\n[1, 2, 3]\n    '''\n    out = [x for x in values if isinstance(x, int)]\n    return out"
+  },
+  {
+    "task_id": "Python_74",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def total_match(lst1, lst2):\n    '''\nWrite a function that accepts two lists of strings and returns the list that has\ntotal number of chars in the all strings of the list less than the other list.\nif the two lists have the same number of chars, return the first list.\nExamples\ntotal_match([], []) \u279e []\ntotal_match(['hi', 'admin'], ['hI', 'Hi']) \u279e ['hI', 'Hi']\ntotal_match(['hi', 'admin'], ['hi', 'hi', 'admin', 'project']) \u279e ['hi', 'admin']\ntotal_match(['hi', 'admin'], ['hI', 'hi', 'hi']) \u279e ['hI', 'hi', 'hi']\ntotal_match(['4'], ['1', '2', '3', '4', '5']) \u279e ['4']\n    '''\n    l1 = 0\n    for st in lst1:\n        l1 += len(st)\n    \n    l2 = 0\n    for st in lst2:\n        l2 += len(st)\n    \n    if l1 < l2:\n        return lst1\n    else:\n    return lst1\n\n\n    return lst1\n\n    \n\n    return lst1"
+  },
+  {
+    "task_id": "Python_65",
+    "status": "fail",
+    "nb_trajectory_elems": 15,
+    "latest_code": "def circular_shift(x, shift):\n    '''\nCircular shift the digits of the integer x, shift the digits right by shift\nand return the result as a string.\nIf shift > number of digits, return digits reversed.\n>>> circular_shift(12, 1)\n\"21\"\n>>> circular_shift(12, 2)\n\"12\"\n    '''\n    s = str(x)\n    if shift > len(s):\n        return s[::-1]\n    else:\n    return s[-shift:] + s[:-shift]"
+  },
+  {
+    "task_id": "Python_50",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def encode_shift(s: str):\n    \"\"\"\n    returns encoded string by shifting every character by 5 in the alphabet.\n    \"\"\"\n    return \"\".join([chr(((ord(ch) + 5 - ord(\"a\")) % 26) + ord(\"a\")) for ch in s])\n\n\ndef decode_shift(s: str):\n    '''\ntakes as input string encoded with encode_shift function. Returns decoded string.\n    '''\n    [chr( ((ord(ch) - 5 - ord('a')) % 26) + ord('a') ) for ch in s"
+  },
+  {
+    "task_id": "Python_13",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def greatest_common_divisor(a: int, b: int) -> int:\n    '''\nReturn a greatest common divisor of two integers a and b\n>>> greatest_common_divisor(3, 5)\n1\n>>> greatest_common_divisor(25, 15)\n5\n    '''\n    while b:\n        a, b = b, a % b\n    return a"
+  },
+  {
+    "task_id": "Python_32",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "import math\n\n\ndef poly(xs: list, x: float):\n    \"\"\"\n    Evaluates polynomial with coefficients xs at point x.\n    return xs[0] + xs[1] * x + xs[1] * x^2 + .... xs[n] * x^n\n    \"\"\"\n    return sum([coeff * math.pow(x, i) for i, coeff in enumerate(xs)])\n\n\n\n\ndef find_zero(xs: list):\n    '''\nxs are coefficients of a polynomial.\nfind_zero find x such that poly(x) = 0.\nfind_zero returns only only zero point, even if there are many.\nMoreover, find_zero only takes list xs having even number of coefficients\nand largest non zero coefficient as it guarantees\na solution.\n>>> round(find_zero([1, 2]), 2) # f(x) = 1 + 2x\n-0.5\n>>> round(find_zero([-6, 11, -6, 1]), 2) # (x - 1) * (x - 2) * (x - 3) = -6 + 11x - 6x^2 + x^3\n1.0\n    '''\n    begin, end = -1., 1.\n    while poly(xs, begin) * poly(xs, end) > 0:\n        begin *= 2.0\n        end *= 2.0\n    while begin - end > 1e-10:\n        center = (begin + end) / 2.0\n    if poly(xs, center) * poly(xs, begin) > 0:\n        begin = center\n\n\n    if poly(xs, center) * poly(xs, begin) < 0:\n        begin = center\n    else:\n        end = center\n\n        else:\n            end = center\n    return begin"
+  },
+  {
+    "task_id": "Python_109",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def move_one_ball(arr):\n    '''\nWe have an array 'arr' of N integers arr[1], arr[2], ..., arr[N].The\nnumbers in the array will be randomly ordered. Your task is to determine if\nit is possible to get an array sorted in non-decreasing order by performing\nthe following operation on the given array:\nYou are allowed to perform right shift operation any number of times.\nOne right shift operation means shifting all elements of the array by one\nposition in the right direction. The last element of the array will be moved to\nthe starting position in the array i.e. 0th index.\nIf it is possible to obtain the sorted array by performing the above operation\nthen return True else return False.\nIf the given array is empty then return True.\nNote: The given list is guaranteed to have unique elements.\nFor Example:\nmove_one_ball([3, 4, 5, 1, 2])==>True\nExplanation: By performin 2 right shift operations, non-decreasing order can\nbe achieved for the given array.\nmove_one_ball([3, 5, 4, 1, 2])==>False\nExplanation:It is not possible to get non-decreasing order for the given\narray by performing any number of right shift operations.\n    '''\n    if len(arr)==0:\n      return True\n    sorted_array=sorted(arr)\n    my_arr=[]\n    \n    min_value=min(arr)\n    min_index = arr.index(min_value)\n\n    my_arr = arr[min_index:]+arr[0: min_index]\n\n    for i in range(len(arr)):\n      if my_arr[i]!=sorted_array[i]:\n        return False\n    return True"
+  },
+  {
+    "task_id": "Python_6",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List\n\n\ndef parse_nested_parens(paren_string: str) -> List[int]:\n    '''\nInput to this function is a string represented multiple groups for nested parentheses separated by spaces.\nFor each of the group, output the deepest level of nesting of parentheses.\nE.g. (()()) has maximum two levels of nesting while ((())) has three.\n>>> parse_nested_parens('(()()) ((())) () ((())()())')\n[2, 3, 1, 3]\n    '''\n    def parse_paren_group(s):\n        depth = 0\n        max_depth = 0\n        for c in s:\n            if c == '(':\n                depth += 1\n    return max_depth\n\n\n    \n    \n\n    \n\n\n        return max_depth\n\n    return [parse_paren_group(x) for x in paren_string.split(' ') if x]"
+  },
+  {
+    "task_id": "Python_23",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def strlen(string: str) -> int:\n    '''\nReturn length of given string\n>>> strlen('')\n0\n>>> strlen('abc')\n3\n    '''\n    return len(string)"
+  },
+  {
+    "task_id": "Python_78",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def hex_key(num):\n    '''\nYou have been tasked to write a function that receives\na hexadecimal number as a string and counts the number of hexadecimal\ndigits that are primes (prime number, or a prime, is a natural number\ngreater than 1 that is not a product of two smaller natural numbers).\nHexadecimal digits are 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F.\nPrime numbers are 2, 3, 5, 7, 11, 13, 17,...\nSo you have to determine a number of the following digits: 2, 3, 5, 7,\nB (=decimal 11), D (=decimal 13).\nNote: you may assume the input is always correct or empty string,\nand symbols A,B,C,D,E,F are always uppercase.\nExamples:\nFor num = \"AB\" the output should be 1.\nFor num = \"1077E\" the output should be 2.\nFor num = \"ABED1A33\" the output should be 4.\nFor num = \"123456789ABCDEF0\" the output should be 6.\nFor num = \"2020\" the output should be 2.\n    '''\n    primes = ('2', '3', '5', '7', 'B', 'D')\n    total = 0\n\n    for i in range(0, len(num)):\n        if num[i] in primes:\n            total += 1\n    return total"
+  },
+  {
+    "task_id": "Python_25",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "from typing import List\n\n\ndef factorize(n: int) -> List[int]:\n    '''\nReturn list of prime factors of given integer in the order from smallest to largest.\nEach of the factors should be listed number of times corresponding to how many times it appeares in factorization.\nInput number should be equal to the product of all factors\n>>> factorize(8)\n[2, 2, 2]\n>>> factorize(25)\n[5, 5]\n>>> factorize(70)\n[2, 5, 7]\n    '''\n    import math\n    fact = []\n    i = 0\n    i = 2\n\n    if n % i == 0:\n        fact.append(i)\n        n //= i\n\n    fact.append(i)\n    n //= i\n\n    n //= i\n\n    else:\n        i += 1\n\n            i += 1\n\n    if n > 1:\n        fact.append(n)\n    return fact"
+  },
+  {
+    "task_id": "Python_69",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def search(lst):\n    '''\nYou are given a non-empty list of positive integers. Return the greatest integer that is greater than\nzero, and has a frequency greater than or equal to the value of the integer itself.\nThe frequency of an integer is the number of times it appears in the list.\nIf no such a value exist, return -1.\nExamples:\nsearch([4, 1, 2, 2, 3, 1]) == 2\nsearch([1, 2, 2, 3, 3, 3, 4, 4, 4]) == 3\nsearch([5, 5, 4, 4, 4]) == -1\n    '''\n    frq = [0] * (max(lst) + 1)\n    for i in lst:\n        frq[i] += 1;\n\n    ans = 0\n    for i in range(1, len(frq)):\n        if frq[i] >= i:\n            ans = i\n    \n    return ans if ans != 0 else -1"
+  },
+  {
+    "task_id": "Python_132",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def is_nested(string):\n    '''\nCreate a function that takes a string as input which contains only square brackets.\nThe function should return True if and only if there is a valid subsequence of brackets\nwhere at least one bracket in the subsequence is nested.\nis_nested('[[]]') \u279e True\nis_nested('[]]]]]]][[[[[]') \u279e False\nis_nested('[][]') \u279e False\nis_nested('[]') \u279e False\nis_nested('[[][]]') \u279e True\nis_nested('[[]][[') \u279e True\n    '''\n    def is_nested_inner(string):\n\n        nesting = 0\n        for c in string:\n            if c == '(':\n                nesting += 1\n            elif c == ')':\n                nesting -= 1\n            if nesting > 0:\n                return True\n    return True"
+  },
+  {
+    "task_id": "Python_125",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def split_words(txt):\n    '''\nGiven a string of words, return a list of words split on whitespace, if no whitespaces exists in the text you\nshould split on commas ',' if no commas exists you should return the number of lower-case letters with odd order in the\nalphabet, ord('a') = 0, ord('b') = 1, ... ord('z') = 25\nExamples\nsplit_words(\"Hello world!\") \u279e [\"Hello\", \"world!\"]\nsplit_words(\"Hello,world!\") \u279e [\"Hello\", \"world!\"]\nsplit_words(\"abcdef\") == 3\n    '''\n    if \" \" in txt:\n        return txt.split()\n    elif \",\" in txt:\n    return txt.split,\n\n\n\n\n\n    else:\n        return len([i for i in txt if i.islower() and ord(i)%2 == 0])"
+  },
+  {
+    "task_id": "Python_48",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def is_palindrome(text: str):\n    '''\nChecks if given string is a palindrome\n>>> is_palindrome('')\nTrue\n>>> is_palindrome('aba')\nTrue\n>>> is_palindrome('aaaaa')\nTrue\n>>> is_palindrome('zbcd')\nFalse\n    '''\n    for i in range(len(text)): \n        if text[i] != text[-i-1]:\n            return False\n    return True\n\n    if text[i] != text[-i-1]:\n\n            return False\n    return True"
+  },
+  {
+    "task_id": "Python_15",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def string_sequence(n: int) -> str:\n    '''\nReturn a string containing space-delimited numbers starting from 0 upto n inclusive.\n>>> string_sequence(0)\n'0'\n>>> string_sequence(5)\n'0 1 2 3 4 5'\n    '''\n    return '0' if n == 0 else ' '.join([str(x) for x in range(n+1)])"
+  },
+  {
+    "task_id": "Python_91",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def is_bored(S):\n    '''\nYou'll be given a string of words, and your task is to count the number\nof boredoms. A boredom is a sentence that starts with the word \"I\".\nSentences are delimited by '.', '?' or '!'.\nFor example:\n>>> is_bored(\"Hello world\")\n0\n>>> is_bored(\"The sky is blue. The sun is shining. I love this weather\")\n1\n    '''\n    import re\n    sentences = re.split(r'[.?!]\\s*', S)\n    return sum((sentence[0] == 'I' and sentence[1] == ' ') for sentence in sentences if sentence)"
+  },
+  {
+    "task_id": "Python_111",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def histogram(test):\n    '''\nGiven a string representing a space separated lowercase letters, return a dictionary\nof the letter with the most repetition and containing the corresponding count.\nIf several letters have the same occurrence, return all of them.\nExample:\nhistogram('a b c') == {'a': 1, 'b': 1, 'c': 1}\nhistogram('a b b a') == {'a': 2, 'b': 2}\nhistogram('a b c a b') == {'a': 2, 'b': 2}\nhistogram('b b b b a') == {'b': 4}\nhistogram('') == {}\n    '''\n    dict1={}\n    list1 = test.split(' ') if test else []\n\n    t=1\n\n    for i in list1:\n        if(list1.count(i)>t) and i!='':\n            t=list1.count(i)\n    if t>0:\n        for i in list1:\n            if(list1.count(i)==t):\n                \n                dict1[i]=t\n    return dict1"
+  },
+  {
+    "task_id": "Python_31",
+    "status": "pass",
+    "nb_trajectory_elems": 13,
+    "latest_code": "def is_prime(n):\n    '''\nReturn true if a given number is prime, and false otherwise.\n>>> is_prime(6)\nFalse\n>>> is_prime(101)\nTrue\n>>> is_prime(11)\nTrue\n>>> is_prime(13441)\nTrue\n>>> is_prime(61)\nTrue\n>>> is_prime(4)\nFalse\n>>> is_prime(1)\nFalse\n    '''\n    if n == 1: return False\n\n    \n\n\n    for k in range(2, int(n**0.5) + 1):\n\n        if n % k == 0:\n            return False\n    return True"
+  },
+  {
+    "task_id": "Python_154",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def cycpattern_check(a , b):\n    '''\nYou are given 2 words. You need to return True if the second word or any of its rotations is a substring in the first word\ncycpattern_check(\"abcd\",\"abd\") => False\ncycpattern_check(\"hello\",\"ell\") => True\ncycpattern_check(\"whassup\",\"psus\") => False\ncycpattern_check(\"abab\",\"baa\") => True\ncycpattern_check(\"efef\",\"eeff\") => False\ncycpattern_check(\"himenss\",\"simen\") => True\n    '''\n    l = len(b)\n    pat = b + b\n    for i in range(len(a) - l + 1):\n    for j in range(len(b))\n\n\n\n\n\n            if a[i:i+l] == pat[j:j+l]:\n                return True\n    return False"
+  },
+  {
+    "task_id": "Python_163",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def generate_integers(a, b):\n    '''\nGiven two positive integers a and b, return the even digits between a\nand b, in ascending order.\nFor example:\ngenerate_integers(2, 8) => [2, 4, 6, 8]\ngenerate_integers(8, 2) => [2, 4, 6, 8]\ngenerate_integers(10, 14) => []\n    '''\n    lower = max(2, min(a, b))\n    upper = min(8, max(a, b))\n\n    return [i for i in range(lower, upper+1) if i % 2 == 0]"
+  },
+  {
+    "task_id": "Python_49",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def modp(n: int, p: int):\n    '''\nReturn 2^n modulo p (be aware of numerics).\n>>> modp(3, 5)\n3\n>>> modp(1101, 101)\n2\n>>> modp(0, 101)\n1\n>>> modp(3, 11)\n8\n>>> modp(100, 101)\n1\n    '''\n    ret = 1\n\n    for i in range(n):\n        ret = (2 * ret) % p\n    return ret"
+  },
+  {
+    "task_id": "Python_40",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def triples_sum_to_zero(l: list):\n    '''\ntriples_sum_to_zero takes a list of integers as an input.\nit returns True if there are three distinct elements in the list that\nsum to zero, and False otherwise.\n>>> triples_sum_to_zero([1, 3, 5, 0])\nFalse\n>>> triples_sum_to_zero([1, 3, -2, 1])\nTrue\n>>> triples_sum_to_zero([1, 2, 3, 7])\nFalse\n>>> triples_sum_to_zero([2, 4, -5, 3, 9, 7])\nTrue\n>>> triples_sum_to_zero([1])\nFalse\n    '''\n    for i in range(0, len(l)):\n\n\n        for j in range(i + 1, len(l)):\n            for k in range(j + 1, len(l)):\n                if l[i] + l[j] + l[k] == 0:\n                    return True\n    return False"
+  },
+  {
+    "task_id": "Python_85",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def add(lst):\n    '''\nGiven a non-empty list of integers lst. add the even elements that are at odd indices..\nExamples:\nadd([4, 2, 6, 7]) ==> 2\n    '''\n    return sum([lst[i] for i in range(1, len(lst), 2) if lst[i]%2 == 0])"
+  },
+  {
+    "task_id": "Python_115",
+    "status": "pass",
+    "nb_trajectory_elems": 7,
+    "latest_code": "def max_fill(grid, capacity):\n    import math\n    '''\nYou are given a rectangular grid of wells. Each row represents a single well,\nand each 1 in a row represents a single unit of water.\nEach well has a corresponding bucket that can be used to extract water from it,\nand all buckets have the same capacity.\nYour task is to use the buckets to empty the wells.\nOutput the number of times you need to lower the buckets.\nExample 1:\nInput:\ngrid : [[0,0,1,0], [0,1,0,0], [1,1,1,1]]\nbucket_capacity : 1\nOutput: 6\nExample 2:\nInput:\ngrid : [[0,0,1,1], [0,0,0,0], [1,1,1,1], [0,1,1,1]]\nbucket_capacity : 2\nOutput: 5\nExample 3:\nInput:\ngrid : [[0,0,0], [0,0,0]]\nbucket_capacity : 5\nOutput: 0\nConstraints:\n* all wells have the same length\n* 1 <= grid.length <= 10^2\n* 1 <= grid[:,1].length <= 10^2\n* grid[i][j] -> 0 | 1\n* 1 <= capacity <= 10\n    '''\n    return sum([math.ceil(sum(arr)/capacity) for arr in grid])"
+  },
+  {
+    "task_id": "Python_114",
+    "status": "fail",
+    "nb_trajectory_elems": 16,
+    "latest_code": "def minSubArraySum(nums):\n    '''\nGiven an array of integers nums, find the minimum sum of any non-empty sub-array\nof nums.\nExample\nminSubArraySum([2, 3, 4, 1, 2, 4]) == 1\nminSubArraySum([-1, -2, -3]) == -6\n    '''\n    max_sum = 0\n    s = 0\n    for num in nums:\n    current_min = nums[0] if nums else 0\n\n        if (s < 0):\n            s = 0\n    current_min = min(num, current_min + num)\n    max_sum = current_min\n\n\n\n\n    if max_sum == 0:\n        max_sum = max(-i for i in nums)\n    min_sum = min(-i for i in nums)\n    return min_sum"
+  },
+  {
+    "task_id": "Python_29",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "from typing import List\n\n\ndef filter_by_prefix(strings: List[str], prefix: str) -> List[str]:\n    '''\nFilter an input list of strings only for ones that start with a given prefix.\n>>> filter_by_prefix([], 'a')\n[]\n>>> filter_by_prefix(['abc', 'bcd', 'cde', 'array'], 'a')\n['abc', 'array']\n    '''\n    return [x for x in strings if x.startswith(prefix)]"
+  },
+  {
+    "task_id": "Python_27",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def flip_case(string: str) -> str:\n    '''\nFor a given string, flip lowercase characters to uppercase and uppercase to lowercase.\n>>> flip_case('Hello')\n'hELLO'\n    '''\n    return ''.join([c.swapcase() for c in string])"
+  },
+  {
+    "task_id": "Python_134",
+    "status": "pass",
+    "nb_trajectory_elems": 4,
+    "latest_code": "def check_if_last_char_is_a_letter(txt):\n    '''\nCreate a function that returns True if the last character\nof a given string is an alphabetical character and is not\na part of a word, and False otherwise.\nNote: \"word\" is a group of characters separated by space.\nExamples:\ncheck_if_last_char_is_a_letter(\"apple pie\") \u279e False\ncheck_if_last_char_is_a_letter(\"apple pi e\") \u279e True\ncheck_if_last_char_is_a_letter(\"apple pi e \") \u279e False\ncheck_if_last_char_is_a_letter(\"\") \u279e False\n    '''\n \n    check = txt.split(' ')[-1]\n    return True if len(check) == 1 and check.isalpha() else False"
+  }
+]
