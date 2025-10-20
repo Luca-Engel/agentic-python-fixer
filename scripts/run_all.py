@@ -15,7 +15,7 @@ app = typer.Typer()
 
 
 @app.command()
-def main(run_type: str = "local",
+def main(run_type: str = "local", # one of ["local", "openai", "hf_api"]
          subset: str = "all",
          max_iters: int = 10,
          timeout_secs: int = 10,

@@ -6,7 +6,7 @@ from openai import OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from agent.config import ModelConfig, RuntimeConfig
-from agent.react_loop import ReActLoop
+from agent.langgraph_react_loop import LangGraphReActLoop
 from agent.tools import Toolset
 from eval.task_workspace import TaskWorkspace
 
@@ -144,8 +144,8 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
     try:
         tools = Toolset(workdir=ws.path())
         llm_thought, llm_patch = make_llm(model_cfg)
-        loop = ReActLoop(llm_thought=llm_thought, llm_patch=llm_patch, tools=tools,
-                         max_iters=rt_cfg.max_iters)
+        loop = LangGraphReActLoop(llm_thought=llm_thought, llm_patch=llm_patch, tools=tools,
+                             max_iters = rt_cfg.max_iters)
         res = loop.run()
 
         # Finally, run the tests to see if code passes

@@ -53,7 +53,11 @@ class Toolset:
 
     def get_text_with_indents(self, nb_indents: int, text: str) -> str:
         lines = text.splitlines()
-        first_line = lines[0]
+        if lines:
+            first_line = lines[0]
+        else:
+            first_line = ""
+            lines = [""]
 
         leading = len(first_line) - len(first_line.lstrip()) if first_line else 0
         processed_lines = []
@@ -94,70 +98,71 @@ class Toolset:
         return ToolResult(True, "\n".join(hits) or "(no hits)")
 
 
-
-
 if __name__ == "__main__":
-    correct_code = """
-from typing import List
+    print("".splitlines()[0])
 
-
-def has_close_elements(numbers: List[float], threshold: float) -> bool:
-    for idx, elem in enumerate(numbers):
-        for idx2, elem2 in enumerate(numbers):
-            if idx != idx2:
-                distance = abs(elem - elem2)
-                if distance < threshold:
-                    return True
- 
-    return False
-"""
-
-    buggy_code = """
-from typing import List
-
-
-def has_close_elements(numbers: List[float], threshold: float) -> bool:
-    for idx, elem in enumerate(numbers):
-        for idx2, elem2 in enumerate(numbers):
-            if idx != idx2:
-                distance = elem - elem2
-                if distance < threshold:
-                    return True
- 
-    return False
-"""
-
-    test_code = """
-def check(has_close_elements):
-    assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.3) == True
-    assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.05) == False
-    assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.95) == True
-    assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.8) == False
-    assert has_close_elements([1.0, 2.0, 3.0, 4.0, 5.0, 2.0], 0.1) == True
-    assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 1.0) == True
-    assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 0.5) == False
-
-check(has_close_elements)
-
-    """
-
-    task = {
-        "task_id": "id_123",
-        "entry_file": "task.py",
-        "entry_point": "has_close_elements",
-        "entire_buggy_code": buggy_code, # correct_code,
-        "test": test_code,
-    }
-
-    ws = TaskWorkspace(task)
-    tools = Toolset(workdir=ws.path())
-
-    # code, output = run_pytests_docker(
-    #     workdir=tools.workdir
-    # )
-
-    tool_res = tools.run_pytests()
-    print("ToolResult:", tool_res)
-
-    # print("Exit code:", code)
-    # print("Output:\n", output)
+# if __name__ == "__main__":
+#     correct_code = """
+# from typing import List
+#
+#
+# def has_close_elements(numbers: List[float], threshold: float) -> bool:
+#     for idx, elem in enumerate(numbers):
+#         for idx2, elem2 in enumerate(numbers):
+#             if idx != idx2:
+#                 distance = abs(elem - elem2)
+#                 if distance < threshold:
+#                     return True
+#
+#     return False
+# """
+#
+#     buggy_code = """
+# from typing import List
+#
+#
+# def has_close_elements(numbers: List[float], threshold: float) -> bool:
+#     for idx, elem in enumerate(numbers):
+#         for idx2, elem2 in enumerate(numbers):
+#             if idx != idx2:
+#                 distance = elem - elem2
+#                 if distance < threshold:
+#                     return True
+#
+#     return False
+# """
+#
+#     test_code = """
+# def check(has_close_elements):
+#     assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.3) == True
+#     assert has_close_elements([1.0, 2.0, 3.9, 4.0, 5.0, 2.2], 0.05) == False
+#     assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.95) == True
+#     assert has_close_elements([1.0, 2.0, 5.9, 4.0, 5.0], 0.8) == False
+#     assert has_close_elements([1.0, 2.0, 3.0, 4.0, 5.0, 2.0], 0.1) == True
+#     assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 1.0) == True
+#     assert has_close_elements([1.1, 2.2, 3.1, 4.1, 5.1], 0.5) == False
+#
+# check(has_close_elements)
+#
+#     """
+#
+#     task = {
+#         "task_id": "id_123",
+#         "entry_file": "task.py",
+#         "entry_point": "has_close_elements",
+#         "entire_buggy_code": buggy_code, # correct_code,
+#         "test": test_code,
+#     }
+#
+#     ws = TaskWorkspace(task)
+#     tools = Toolset(workdir=ws.path())
+#
+#     # code, output = run_pytests_docker(
+#     #     workdir=tools.workdir
+#     # )
+#
+#     tool_res = tools.run_pytests()
+#     print("ToolResult:", tool_res)
+#
+#     # print("Exit code:", code)
+#     # print("Output:\n", output)

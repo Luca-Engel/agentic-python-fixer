@@ -62,7 +62,7 @@ The patch MUST:
   - Replace 1 line x → start=x, end=x+1
   - Insert before line x → start=x, end=x
   - Replace N lines → start=s, end=s+N
-- Set nb_indents to the number of 4-space indentation levels to prepend to EACH line in "text".
+- Set nb_indents to the number of 4-space indentation levels to prepend to EACH line in "text" (i.e., setting nb_indents:1 adds 4 spaces to each line in "text").
 - Keep syntax valid; preserve surrounding style.
 - Change only what the Thought specifies.
 
@@ -79,6 +79,37 @@ Do not include explanations, bullet points, or extra text.
 PATCH_AGENT_QUICK_REMINDER = r"""
 REMEMBER TO FINISH YOUR ANSWER FOLLOWING THIS FORMAT EXACTLY AND ENSURE THAT THE INDENTATION OF THE NEW CODE IS CORRECT:
 Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
+"""
+
+THOUGHT_WORKED_EXAMPLE = r"""
+Worked example (for reference only — do not repeat in your output):
+Erroneous code (with line numbers):
+1: def is_even(n):
+2:     \"\"\"Return True if n is even.\"\"\"
+3:     return n % 2 == 1
+
+Tests (first failing shown):
+assert is_even(4) is True
+# Failure:
+# E   AssertionError: assert False is True
+
+Correct next-step output (format template to imitate):
+Thought[Replace line 3 with 'return n % 2 == 0']
+"""
+
+PATCH_WORKED_EXAMPLE = r"""
+Worked example (for reference only — do not repeat in your output):
+
+Erroneous code (with line numbers):
+1: def is_even(n):
+2:     \"\"\"Return True if n is even.\"\"\"
+3:     return n % 2 == 1
+
+Given the Thought:
+Thought[Replace line 3 with 'return n % 2 == 0']
+
+Apply exactly one contiguous patch:
+Patch[{"start":3,"end":4,"nb_indents":1,"text":"return n % 2 == 0"}]
 """
 
 
@@ -109,6 +140,7 @@ def build_thought_prompt(
             SYSTEM_PROMPT
             + "\n"
             + THOUGHT_AGENT_INSTRUCTIONS
+            + "\n" + THOUGHT_WORKED_EXAMPLE
             + "\n\nPrevious steps (last few):\n" + traj
             + "\n\nImportant: You are continuing an iterative repair loop."
               " Use insights from previous steps but DO NOT repeat prior failed edits."
@@ -131,6 +163,7 @@ def build_patch_prompt(
             SYSTEM_PROMPT
             + "\n"
             + PATCH_AGENT_INSTRUCTIONS
+            + "\n" + PATCH_WORKED_EXAMPLE
             + "\n\nThought to implement (verbatim):\n" + thought_line + "\n\n"
             + "Previous steps (last few):\n" + traj
             + "\n\nImportant: You are in an iterative bug-fixing loop."

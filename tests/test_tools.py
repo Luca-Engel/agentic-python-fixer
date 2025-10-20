@@ -2,6 +2,13 @@ import pytest
 from agent.tools import Toolset
 
 
+def test_empty_string_handled_without_error():
+    t = Toolset(".")
+    text = ""
+    out = t.get_text_with_indents(1, text)
+    assert out == "    \n"
+
+
 def test_basic_removes_leading_and_adds_indent():
     t = Toolset(".")
     text = "    line1\n    line2\n"
@@ -45,9 +52,3 @@ def test_always_appends_newline():
     text = "    a\n    b"  # no trailing newline in input
     out = t.get_text_with_indents(0, text)
     assert out == "a\nb\n"
-
-
-def test_empty_text_raises_index_error():
-    t = Toolset(".")
-    with pytest.raises(IndexError):
-        t.get_text_with_indents(1, "")

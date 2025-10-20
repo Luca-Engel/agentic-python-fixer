@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2025-10-20T03:50:46.447026",
+    "config": {
+      "run_type": "openai",
+      "subset": "stratified_0.1",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "gpt-4o mini",
+      "report": "reports\\openai_fix_py_sub40_02-00.json"
+    },
+    "summary": {
+      "pass_at_1": 0.36666666666666664,
+      "nb_passed": 11,
+      "nb_total": 30
+    }
+  },
+  {
+    "timestamp": "2025-10-20T04:13:26.590394",
+    "config": {
+      "run_type": "openai",
+      "subset": "stratified_0.1",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "gpt-4o mini",
+      "report": "reports\\openai_fix_py_sub40_02-00.json"
+    },
+    "summary": {
+      "pass_at_1": 0.4666666666666667,
+      "nb_passed": 14,
+      "nb_total": 30
+    }
+  }
+]
