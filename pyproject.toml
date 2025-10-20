@@ -20,13 +20,15 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "pydantic>=2.8.2",
     "unidiff>=0.7.5",
+    "matplotlib>=3.6",
     "psutil>=6.0.0",
     "portalocker>=2.10.1",
     "tiktoken>=0.7.0", # optional token counting
     "bitsandbytes>=0.43.1; platform_system!='Windows'", # if quantizing
     "tqdm>=4.66.0",
     "openai>=1.40.0",
-    "black>=24.3.0"
+    "black>=24.3.0",
+    "notebook>=7.4.7",
 ]
 
 [tool.setuptools.packages.find]

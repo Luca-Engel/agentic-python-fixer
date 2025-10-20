@@ -6,6 +6,15 @@ This framework runs models **locally**, via **OpenAI’s API**, or via the **Hug
 
 ---
 
+## 📈 Results
+
+The Jupyter notebook `notebooks/Model_Performance_Analysis.ipynb` contains detailed performance analyses across different models and dataset subsets along with visualizations and analysis of the plots.
+
+
+
+---
+
+
 ## 📁 Project Structure
 
 ```text

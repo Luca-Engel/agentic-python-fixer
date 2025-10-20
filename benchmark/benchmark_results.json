@@ -7,7 +7,7 @@
       "max_iters": 5,
       "timeout_secs": 10,
       "model_name": "gpt-4o mini",
-      "report": "reports\\openai_fix_py_sub40_04-00.json"
+      "report": "reports\\openai_gpt-4o-mini_stratified_0-35_34268dc1.json"
     },
     "summary": {
       "pass_at_1": 0.4838709677419355,
@@ -23,12 +23,44 @@
       "max_iters": 5,
       "timeout_secs": 10,
       "model_name": "Qwen/Qwen3-1.7B",
-      "report": "reports\\qwen1-7_hef_fix_py_sub40_04-00.json"
+      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-35_34268dc1.json"
     },
     "summary": {
       "pass_at_1": 0.5,
       "nb_passed": 31,
       "nb_total": 62
+    }
+  },
+  {
+    "timestamp": "2025-10-20T12:57:30.849061",
+    "config": {
+      "run_type": "openai",
+      "subset": "stratified_0.5",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "gpt-4o mini",
+      "report": "reports\\openai_gpt-4o-mini_stratified_0-5_7383c822.json"
+    },
+    "summary": {
+      "pass_at_1": 0.4588235294117647,
+      "nb_passed": 39,
+      "nb_total": 85
+    }
+  },
+  {
+    "timestamp": "2025-10-20T19:14:01.680508",
+    "config": {
+      "run_type": "hf_api",
+      "subset": "stratified_0.5",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "Qwen/Qwen3-1.7B",
+      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-5_7383c822.json"
+    },
+    "summary": {
+      "pass_at_1": 0.4,
+      "nb_passed": 34,
+      "nb_total": 85
     }
   }
 ]
