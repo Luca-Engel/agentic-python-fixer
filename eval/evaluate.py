@@ -91,6 +91,7 @@ def _instantiate_model_hf_api(frequency_penalty=0.2, presence_penalty=0.0):
         resp = _client.chat.completions.create(
             model=env_model,
             messages=[{"role": "user", "content": prompt}],
+            seed=42
             # stream=True,
             # Thinking mode
             # temperature=0.6,
@@ -98,7 +99,6 @@ def _instantiate_model_hf_api(frequency_penalty=0.2, presence_penalty=0.0):
             # presence_penalty=presence_penalty,
             # frequency_penalty=frequency_penalty,
             # max_tokens=30000,
-            # seed=42
 
 
 
