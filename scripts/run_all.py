@@ -30,8 +30,6 @@ def main(run_type: str = "local",
     model_name = run_type_to_name[run_type]
 
     tasks = load_tasks()
-    tasks = tasks.select(range(1))
-
     if subset.startswith("stratified"):
         fraction = float(subset.split("0")[1]) if "_" in subset else 0.2
         print(f"Using stratified sampling with fraction={fraction}")
