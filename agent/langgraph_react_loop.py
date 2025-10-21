@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, TypedDict
+from typing import Any, Dict, List, Literal, TypedDict, Tuple
 
 from langgraph.graph import StateGraph, START, END
 
@@ -10,18 +10,13 @@ from agent.tools import Toolset
 
 
 class LoopState(TypedDict, total=False):
-    # Immutable inputs (read as needed)
     code: str
     tests: str
-
-    # Runtime
     trajectory: List[str]
     tests_run_prompt_block: str
     last_obs: str
     iterations: int
     status: Literal["running", "done", "budget_exhausted"]
-
-    # Intermediates
     thought_line: str
 
 
@@ -32,15 +27,13 @@ class LangGraphReActLoop:
         self.tools = tools
         self.max_iters = max_iters
 
-    # ---------- helpers ----------
-
     def _open_code(self) -> str:
         return self.tools.open_file("task.py").output.strip()
 
     def _open_tests(self) -> str:
         return self.tools.open_file("raw_test_task.py").output.strip()
 
-    def _run_tests_as_prompt_block(self) -> (str, str):
+    def _run_tests_as_prompt_block(self) -> Tuple[str, str]:
         res = self.tools.run_pytests()
         if res.ok:
             return "All tests passed.", "All tests passed."
@@ -60,9 +53,10 @@ class LangGraphReActLoop:
             "status": status,
         }
 
-    # ---------- nodes ----------
-
     def node_thought(self, state: LoopState) -> LoopState:
+        """
+        Generate a Thought from the LLM based on the current state.
+        """
         if state["iterations"] >= self.max_iters:
             state["status"] = "budget_exhausted"
             return state
@@ -74,7 +68,6 @@ class LangGraphReActLoop:
             current_trajectory=state["trajectory"],
         )
         out = self.llm_thought(thought_prompt)
-        print(" -> LLM completion thought output:\n", out)
         # parse
         try:
             kind, payload, matched = parse_thought(out)
@@ -88,6 +81,9 @@ class LangGraphReActLoop:
         return state
 
     def node_patch(self, state: LoopState) -> LoopState:
+        """
+        Generate a Patch from the LLM based on the current Thought.
+        """
         if not state.get("thought_line"):
             return state
 
@@ -99,7 +95,6 @@ class LangGraphReActLoop:
             current_trajectory=state["trajectory"],
         )
         out = self.llm_patch(patch_prompt)
-        print(" -> LLM completion patch output:\n", out)
 
         # parse + apply
         try:
@@ -121,9 +116,10 @@ class LangGraphReActLoop:
             state["status"] = "done"
         return state
 
-    # ---------- run ----------
-
     def run(self) -> Dict[str, Any]:
+        """
+        Run the ReAct loop until done or budget exhausted.
+        """
         initial = self._init_state()
         if initial["status"] == "done":
             return {"status": "done", "trajectory": initial["trajectory"]}
@@ -149,8 +145,6 @@ class LangGraphReActLoop:
         app = graph.compile()
         final: LoopState = app.invoke(initial)
 
-        print(f"Final trajectory:\n" + "\n".join(final["trajectory"]))
-        print(f"Final status: {final['status']}")
         return {
             "status": final["status"],
             "trajectory": final["trajectory"],

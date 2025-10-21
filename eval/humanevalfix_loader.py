@@ -14,10 +14,10 @@ def add_file_names_to_row(row):
 
 
 def load_tasks(ds_id: str = "bigcode/humanevalpack", lang: str = "python", split: str = "test"):
-    columns = ["task_id", "declaration", "entire_buggy_code", "test", "entry_point", "bug_type", "entry_file", "raw_test_file", "test_file"]
+    columns = ["task_id", "declaration", "entire_buggy_code", "test", "entry_point", "bug_type", "entry_file",
+               "raw_test_file", "test_file"]
     ds = load_dataset(ds_id, name=lang, split=split)
     ds = ds.map(add_file_names_to_row, desc="normalize")
-    print("Original columns:", ds.column_names)
 
     ds = ds.select_columns(columns)
 
@@ -49,27 +49,3 @@ def stratified_sample(ds, percent: float = 0.25, min_per_class: int = 5, seed: i
         sampled.extend(rng.sample(ts, n_selected))
 
     return sampled
-
-
-if __name__ == "__main__":
-    from collections import Counter
-
-    tasks = load_tasks()
-    # print("Dataset fields:", tasks.column_names)
-    # print(f"Loaded {len(tasks)} tasks, example:")
-    # first_task = tasks[0]
-    # print("first task buggy code:")
-    # print(first_task["entire_buggy_code"])
-
-    counts = Counter(tasks["bug_type"])
-    print("\nBug type counts:")
-    for bug_type, cnt in counts.most_common():
-        print(f"  {bug_type}: {cnt}")
-    print(f"\nTotal tasks counted: {sum(counts.values())}")
-
-    sampled_tasks = stratified_sample(tasks, percent=0.2, min_per_class=5, seed=42)
-    sampled_counts = Counter(t["bug_type"] for t in sampled_tasks)
-    print("\nSampled bug type counts:")
-    for bug_type, cnt in sampled_counts.most_common():
-        print(f"  {bug_type}: {cnt}")
-    print(f"\nTotal sampled tasks: {len(sampled_tasks)}")

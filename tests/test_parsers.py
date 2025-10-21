@@ -86,16 +86,16 @@ def test__parse_patch_invalid(block):
 def test_parse_then_patch_roundtrip_with_matchers():
     messy = """
     random chatter
-    Patch: {"start": 4, "end": 9, "text": "replacement"}
+    Patch: {"start": 4, "end": 9, "text": "ignore this one"}
     some middle text
-    Patch: {"start": 1, "end": 3, "text": "ignore this one"}
+    Patch: {"start": 1, "end": 3, "text": "replacement that should be parsed"}
     """
     inner, matched, name = match_patch(messy)
     assert name == "Patch"
     assert inner.strip().startswith("{") and inner.strip().endswith("}")
     kind, args, matched2 = parse_patch(matched)
     assert kind == "Patch"
-    assert args["start"] == 4 and args["end"] == 9 and args["text"] == "replacement"
+    assert args["start"] == 1 and args["end"] == 3 and args["text"] == "replacement that should be parsed"
 
 
 def test_parse_then_thought_roundtrip_with_matchers():

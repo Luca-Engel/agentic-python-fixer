@@ -1,4 +1,3 @@
-# test_sampling.py
 import math
 import pytest
 from collections import Counter

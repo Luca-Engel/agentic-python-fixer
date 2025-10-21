@@ -1,21 +1,5 @@
 [
   {
-    "timestamp": "2025-10-20T04:48:55.999843",
-    "config": {
-      "run_type": "openai",
-      "subset": "stratified_0.35",
-      "max_iters": 5,
-      "timeout_secs": 10,
-      "model_name": "gpt-4o mini",
-      "report": "reports\\openai_gpt-4o-mini_stratified_0-35_34268dc1.json"
-    },
-    "summary": {
-      "pass_at_1": 0.4838709677419355,
-      "nb_passed": 30,
-      "nb_total": 62
-    }
-  },
-  {
     "timestamp": "2025-10-20T08:33:24.435450",
     "config": {
       "run_type": "hf_api",
@@ -23,28 +7,12 @@
       "max_iters": 5,
       "timeout_secs": 10,
       "model_name": "Qwen/Qwen3-1.7B",
-      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-35_34268dc1.json"
+      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-35.json"
     },
     "summary": {
       "pass_at_1": 0.5,
       "nb_passed": 31,
       "nb_total": 62
-    }
-  },
-  {
-    "timestamp": "2025-10-20T12:57:30.849061",
-    "config": {
-      "run_type": "openai",
-      "subset": "stratified_0.5",
-      "max_iters": 5,
-      "timeout_secs": 10,
-      "model_name": "gpt-4o mini",
-      "report": "reports\\openai_gpt-4o-mini_stratified_0-5_7383c822.json"
-    },
-    "summary": {
-      "pass_at_1": 0.4588235294117647,
-      "nb_passed": 39,
-      "nb_total": 85
     }
   },
   {
@@ -55,11 +23,43 @@
       "max_iters": 5,
       "timeout_secs": 10,
       "model_name": "Qwen/Qwen3-1.7B",
-      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-5_7383c822.json"
+      "report": "reports\\qwen3_1-7b_huggingface_stratified_0-5.json"
     },
     "summary": {
       "pass_at_1": 0.4,
       "nb_passed": 34,
+      "nb_total": 85
+    }
+  },
+  {
+    "timestamp": "2025-10-21T02:22:05.608424",
+    "config": {
+      "run_type": "openai",
+      "subset": "stratified_0.35",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "gpt-4o mini",
+      "report": "reports\\openai_gpt-4o-mini_stratified_0-35.json"
+    },
+    "summary": {
+      "pass_at_1": 0.5,
+      "nb_passed": 31,
+      "nb_total": 62
+    }
+  },
+  {
+    "timestamp": "2025-10-21T02:38:09.805883",
+    "config": {
+      "run_type": "openai",
+      "subset": "stratified_0.5",
+      "max_iters": 5,
+      "timeout_secs": 10,
+      "model_name": "gpt-4o mini",
+      "report": "reports\\openai_gpt-4o-mini_stratified_0-5.json"
+    },
+    "summary": {
+      "pass_at_1": 0.4470588235294118,
+      "nb_passed": 38,
       "nb_total": 85
     }
   }

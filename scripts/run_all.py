@@ -20,6 +20,9 @@ def main(run_type: str = "local", # one of ["local", "openai", "hf_api"]
          max_iters: int = 10,
          timeout_secs: int = 10,
          report: str = "reports/hef_py_report.json"):
+    """
+    Run all HumanevalFix tasks with the specified model and configuration.
+    """
     if run_type not in ["local", "openai", "hf_api"]:
         raise ValueError(f"Unknown model: {run_type}, must be one of 'local', 'openai', 'hf_api'.")
     run_type_to_name = {
@@ -40,7 +43,6 @@ def main(run_type: str = "local", # one of ["local", "openai", "hf_api"]
     results = []
 
     for i, t in enumerate(tqdm(tasks, desc="Running tasks"), start=1):
-        print(f"=== Running task {i}/{len(tasks)}: {t['task_id']} ===")
         results.append(run_single_task(t, mcfg, rcfg))
         with open(report, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)

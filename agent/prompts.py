@@ -116,9 +116,6 @@ Patch[{"start":3,"end":4,"nb_indents":1,"text":"return n % 2 == 0"}]
 def _format_code_and_tests(python_code: str, python_tests: str, tests_run_result: str) -> str:
     python_code_lines = python_code.splitlines()
     numbered_code = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(python_code_lines))
-    print("=== Formatted Prompt Code with Line Numbers ===")
-    print(numbered_code)
-    print("=== End of Formatted Code ===")
     return (
         "\n\n=== CURRENT CODE (with line numbers) ===\n"
         f"```python\n{numbered_code}\n```"
@@ -134,6 +131,9 @@ def build_thought_prompt(
         tests_run_result: str,
         current_trajectory: list,
 ) -> str:
+    """
+    Build the prompt for the Thought agent.
+    """
     # keep trajectory (last few lines) — this helps the model choose the next step
     traj = "\n".join(current_trajectory[-6:]) if current_trajectory else "No previous iterations."
     return (
@@ -158,6 +158,9 @@ def build_patch_prompt(
         thought_line: str,  # pass the literal "Thought: ..." line here
         current_trajectory: list,
 ) -> str:
+    """
+    Build the prompt for the Patch agent.
+    """
     traj = "\n".join(current_trajectory) if current_trajectory else "No previous iterations."
     return (
             SYSTEM_PROMPT

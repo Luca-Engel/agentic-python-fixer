@@ -81,7 +81,7 @@ You can launch it through **uv** as follows:
 ```bash
 uv run python scripts/run_all.py \
   --run-type hf_api \
-  --subset stratified_0.25 \
+  --subset stratified_0.5 \
   --max-iters 5 \
   --timeout-secs 10 \
   --report reports/qwen1-7_hef_fix_py_sub40_00-58.json

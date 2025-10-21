@@ -31,13 +31,16 @@ def _strip_quotes(s: str) -> str:
         return s[1:-1]
     return s
 
-
 # ---------- Thought ----------
 
 def match_thought(block: str) -> Tuple[str, str, str]:
     """
+    Extracts the LAST Thought occurrence in the block.
+
     Returns: (inner_text, matched_substring, "Thought")
-    Finds the LAST 'Thought[...]' or 'Thought: ...' occurrence in the block.
+
+    Example: Thought[Replace line 3 with 'return n % 2 == 0']
+        -> ("Replace line 3 with 'return n % 2 == 0'", "Thought[...]", "Thought")
     """
     _, m = _last_match(block, _THOUGHT_PATTERNS)
     if not m:
@@ -50,9 +53,10 @@ def match_thought(block: str) -> Tuple[str, str, str]:
 def parse_thought(block: str) -> Tuple[str, Dict[str, Any], str]:
     """
     Strict Thought parser. Accepts:
-      - Thought["..."] / Thought['...'] / Thought[...]
+      - Thought[...]
       - Thought: ...
-    Returns: ("Thought", {"text": <string>}, matched_substring)
+      - Thought ...
+    Returns: (name, {"text": inner_text}, matched_substring)
     """
     inner, matched, name = match_thought(block)
     if not inner:
@@ -64,8 +68,12 @@ def parse_thought(block: str) -> Tuple[str, Dict[str, Any], str]:
 
 def match_patch(block: str) -> Tuple[str, str, str]:
     """
+    Extracts the LAST Patch occurrence in the block.
+
     Returns: (json_text, matched_substring, "Patch")
-    Finds the LAST Patch occurrence in the block.
+
+    Example: Patch[{"start":3,"end":4,"nb_indents":1,"text":"return n % 2 == 0"}]
+        -> ('{"start":3,"end":4,"nb_indents":1,"text":"return n % 2 == 0"}', "Patch[...]", "Patch")
     """
     _, m = _last_match(block, _PATCH_PATTERNS)
     if not m:
@@ -85,11 +93,10 @@ def _coerce_int(name: str, v: Any) -> int:
 def parse_patch(block: str) -> Tuple[str, Dict[str, Any], str]:
     """
     Strict Patch parser. Accepts:
-      - Patch[{...}]
-      - Patch: {...}
-      - Patch {...}
-    Requires keys: start (int), end (int), text (str)
-    Optional: nb_indents (int)
+        - Patch[{"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}]
+        - Patch: {"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}
+        - Patch {"start":<int>,"end":<int>,"nb_indents":<int>,"text":"<new code>"}
+    Returns: (name, {"start": int, "end": int, "text": str, "nb_indents": int}, matched_substring)
     """
     json_text, matched, name = match_patch(block)
 

@@ -12,14 +12,12 @@ from eval.task_workspace import TaskWorkspace
 
 
 def _instantiate_model_locally(model_cfg: ModelConfig):
-    print("Loading model:", model_cfg.model_name)
     tok = AutoTokenizer.from_pretrained(model_cfg.model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_cfg.model_name,
         dtype="auto",
         device_map="auto",
     )
-    print("Model loaded.")
 
     def _call(prompt: str) -> str:
         """
@@ -85,38 +83,14 @@ def _instantiate_model_hf_api(frequency_penalty=0.2, presence_penalty=0.0):
         api_key=api_key
     )
 
-    # for message in chat_completion:
-    #     print(message.choices[0].delta.content, end="")
     def _call(prompt: str) -> str:
         resp = _client.chat.completions.create(
             model=env_model,
             messages=[{"role": "user", "content": prompt}],
             seed=42
-            # stream=True,
-            # Thinking mode
-            # temperature=0.6,
-            # top_p=0.95,
-            # presence_penalty=presence_penalty,
-            # frequency_penalty=frequency_penalty,
-            # max_tokens=30000,
-
-
-
-            # top_k=20,
-            # min_p=0,
-            # Non-thinking mode
-            # temperature=0.7,
-            # top_p=0.8,
-            # top_k=20,
-            # min_p=0,
-            # max_tokens=5000,
-            # seed=42
         )
 
-        content = resp.choices[0].message.content
-        print("len generated content:", len(content.split()))
-
-        return content  #resp.choices[0].message.content
+        return resp.choices[0].message.content
 
     return _call
 
@@ -127,13 +101,10 @@ def make_llm(model_cfg: ModelConfig):
     Returns a tuple (llm_thought, llm_patch)
     """
     if model_cfg.run_type == "local":
-        print("Using local model.")
         return _instantiate_model_locally(model_cfg), _instantiate_model_locally(model_cfg)
     elif model_cfg.run_type == "openai":
-        print("Using OpenAI model.")
         return _instantiate_model_openai(), _instantiate_model_openai()
     elif model_cfg.run_type == "hf_api":
-        print("Using HuggingFace API model.")
         return _instantiate_model_hf_api(frequency_penalty=0.0, presence_penalty=0.0), _instantiate_model_hf_api(0.0, 0.0)
     else:
         raise ValueError(f"Unknown model run_type: {model_cfg.run_type}, must be one of 'local', 'openai', 'hf_api'.")
@@ -156,6 +127,7 @@ def run_single_task(task: Dict[str, Any], model_cfg: ModelConfig, rt_cfg: Runtim
             "status": "pass" if ok else "fail",
             "nb_trajectory_elems": len(res.get("trajectory", [])),
             "latest_code": tools.open_file("task.py").output.strip(),
+            "trajectory": res.get("trajectory", []),
         }
     finally:
         ws.cleanup()

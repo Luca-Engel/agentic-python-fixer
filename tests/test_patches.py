@@ -1,5 +1,3 @@
-import pytest
-
 from agent.patches import SpanPatch, apply_span_patch
 
 
