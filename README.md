@@ -19,22 +19,25 @@ The Jupyter notebook `notebooks/Model_Performance_Analysis.ipynb` contains detai
 
 ```text
 .
-├── agent/ # Core agent logic
-│ ├── config.py # Model and runtime configuration
-│ ├── docker_sandbox.py # Docker-based sandbox for pytest execution
-│ ├── patches.py # Patch representation and application
-│ ├── prompts.py # ReAct prompt templates (Thought + Patch)
-│ ├── react_loop.py # The main ReAct reasoning loop
-│ └── tools.py # Filesystem and execution utilities
-├── eval/ # Evaluation and dataset interface
-│ ├── humanevalfix_loader.py # Loads and stratifies HumanEvalFix tasks
-│ ├── scorer.py # pass@1 metric computation
-│ ├── evaluate.py # Runs a single repair task
-│ └── task_workspace.py # Manages per-task isolated workspaces
-├── docker/sandbox.Dockerfile # Secure sandbox environment definition
-├── scripts/run_all.py # Main CLI entry point
-├── reports/ # JSON reports from experiments
-└── tests/ # Unit tests for all core components
+├── agent/                                     # Core agent logic
+│   ├── config.py                                  # Model and runtime configuration
+│   ├── docker_sandbox.py                          # Docker-based sandbox for pytest execution
+│   ├── langgraph_react_loop.py                    # LangGraph-based ReAct reasoning loop
+│   ├── parsers.py                                 # Output parsers for Thoughts and Patches
+│   ├── patches.py                                 # Patch representation and application
+│   ├── prompts.py                                 # ReAct prompt templates (Thought + Patch)
+│   └── tools.py                                   # Filesystem and execution utilities
+├── eval/                                      # Evaluation and dataset interface
+│   ├── humanevalfix_loader.py                     # Loads and stratifies HumanEvalFix tasks
+│   ├── scorer.py                                  # pass@1 metric computation
+│   ├── evaluate.py                                # Runs a single repair task
+│   └── task_workspace.py                          # Manages per-task isolated workspaces
+├── docker/sandbox.Dockerfile                  # Secure sandbox environment definition
+├── scripts/run_all.py                         # Main CLI entry point
+├── reports/                                   # JSON reports from experiments
+├── benchmark/benchmark_results.json           # Aggregated benchmark results
+├── notebooks/Model_Performance_Analysis.ipynb # Performance analysis notebook
+└── tests/                                     # Unit tests for all core components
 ````
 
 ---
